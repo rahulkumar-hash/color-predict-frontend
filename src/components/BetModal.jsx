@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShieldCheck, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { useGameStore } from '../store/useGameStore';
 
 export default function BetModal({ isOpen, betInfo, onClose, onSuccess }) {
-  if (!isOpen || !betInfo) return null;
-
-  const selection = betInfo.selection;
-
   const { user } = useAuthStore();
   const { placeBet } = useGameStore();
 
@@ -17,11 +13,14 @@ export default function BetModal({ isOpen, betInfo, onClose, onSuccess }) {
   const [multiplier, setMultiplier] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
+  if (!isOpen || !betInfo) return null;
+
+  const selection = betInfo.selection;
   const totalAmount = contractMoney * multiplier;
 
   const getSelectionTitle = () => {
     if (typeof selection === 'number') return `Predict Number ${selection}`;
-    return `Predict ${selection}`;
+    return `Predict ${selection || ''}`;
   };
 
   const getSelectionBadge = () => {
@@ -67,14 +66,16 @@ export default function BetModal({ isOpen, betInfo, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="glass-card max-w-xl w-full mx-auto space-y-4 relative overflow-hidden"
-        onClick={e => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+        <motion.div
+          key="bet-modal-content"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="glass-card max-w-xl w-full mx-auto space-y-4 relative overflow-hidden"
+          onClick={e => e.stopPropagation()}
+        >
         <div className="flex justify-between items-center pb-2 border-b border-slate-800">
           <div className="flex items-center gap-2">
             {getSelectionBadge()}
@@ -159,5 +160,6 @@ export default function BetModal({ isOpen, betInfo, onClose, onSuccess }) {
         </button>
       </motion.div>
     </div>
+    </AnimatePresence>
   );
 }

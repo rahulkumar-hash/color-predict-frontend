@@ -90,30 +90,29 @@ export default function GamePage() {
       const colors = data?.colors || data?.result?.colors || [];
 
       if (num !== undefined && num !== null && data?.periodId) {
-        // Haptic feedback for round conclusion
         vibrateDevice(300);
-
-        toast.success(
-          `🎯 Round #${data.periodId} Winner: Number ${num} (${colors.join(' + ')})`,
-          { duration: 6000 }
+        toast(
+          `🎯 Period #${data.periodId} Result: Number ${num} (${colors.join(' + ')})`,
+          {
+            icon: '🎲',
+            duration: 5000,
+            style: { background: '#1e1b4b', color: '#e0e7ff', border: '1px solid #6366f1' }
+          }
         );
       }
     });
 
     socket.on('betResult', (payload) => {
       console.log('💰 [Socket] betResult Event Received:', payload);
-      if (payload.isWin) {
-        // Haptic vibration for win
+      if (payload.isWin && payload.payout > 0) {
+        // Party Popper Confetti + Win Celebration Toast ONLY when user wins!
         vibrateDevice(600);
         confetti({
-          particleCount: 100,
-          spread: 80,
+          particleCount: 120,
+          spread: 90,
           origin: { y: 0.6 }
         });
         toast.success(`🎉 WINNER! You won ₹${payload.payout.toFixed(2)} on Period #${payload.periodId}!`, { duration: 6000 });
-      } else {
-        vibrateDevice(200);
-        toast.error(`Period #${payload.periodId} lost. Better luck next round!`, { duration: 5000 });
       }
 
       if (payload.newBalance !== undefined) {
@@ -180,12 +179,14 @@ export default function GamePage() {
         </div>
       </main>
 
-      <BetModal
-        isOpen={!!selectedBet}
-        betInfo={selectedBet}
-        onClose={() => setSelectedBet(null)}
-        onSuccess={() => setSelectedBet(null)}
-      />
+      {selectedBet && (
+        <BetModal
+          isOpen={!!selectedBet}
+          betInfo={selectedBet}
+          onClose={() => setSelectedBet(null)}
+          onSuccess={() => setSelectedBet(null)}
+        />
+      )}
 
       <DepositModal
         isOpen={showDepositModal}
