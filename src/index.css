@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#070b14] text-slate-100 font-sans min-h-screen antialiased overflow-x-hidden w-full;
+    background-image: 
+      radial-gradient(circle at 15% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 85% 75%, rgba(16, 185, 129, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.2) 0%, transparent 60%);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+.glass-card {
+  @apply bg-[#0b101d]/90 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-black/40 backdrop-blur-xl text-slate-100 w-full;
+}
+
+.glass-card-premium {
+  @apply bg-gradient-to-b from-[#121829]/95 to-[#0b101d]/95 border border-slate-700/60 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl text-slate-100 relative overflow-hidden w-full;
+}
+
+.neon-glow-green {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+}
+
+.neon-glow-red {
+  box-shadow: 0 0 25px rgba(244, 63, 94, 0.35);
+}
+
+.neon-glow-violet {
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.35);
+}
+
+.btn-touch {
+  @apply active:scale-95 transition-all duration-150 cursor-pointer hover:brightness-110;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(7, 11, 20, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 6px;
+}
