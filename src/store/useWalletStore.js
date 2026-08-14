@@ -45,6 +45,10 @@ export const useWalletStore = create((set, get) => ({
       const res = await apiClient.post('/v1/wallet/deposit', { amount, utrNumber });
       set({ recharging: false });
       get().fetchTransactions();
+      try {
+        const { useAuthStore } = await import('./useAuthStore');
+        useAuthStore.getState().fetchProfile();
+      } catch (e) {}
       return { success: true, message: res.data?.message || 'Recharge request submitted successfully!' };
     } catch (err) {
       set({ recharging: false });
@@ -65,6 +69,10 @@ export const useWalletStore = create((set, get) => ({
       set({ withdrawing: false });
       get().fetchWithdrawalHistory();
       get().fetchTransactions();
+      try {
+        const { useAuthStore } = await import('./useAuthStore');
+        useAuthStore.getState().fetchProfile();
+      } catch (e) {}
       return {
         success: true,
         message: res.data?.message || 'Withdrawal request submitted successfully!',
@@ -96,6 +104,10 @@ export const useWalletStore = create((set, get) => ({
         razorpayPaymentId: rzpPayId,
         status: 'APPROVED'
       });
+      try {
+        const { useAuthStore } = await import('./useAuthStore');
+        useAuthStore.getState().fetchProfile();
+      } catch (e) {}
       return { success: true, message: res.data?.message || 'Payment verified successfully!' };
     } catch (err) {
       return { success: false, error: err.response?.data?.message || 'Verification failed' };

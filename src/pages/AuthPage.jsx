@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Phone, User, KeyRound, ArrowRight, ShieldCheck, AlertCircle, Zap, Award, Sparkles, CheckCircle2, Gift } from 'lucide-react';
+import { Lock, Mail, Phone, User, KeyRound, ArrowRight, ShieldCheck, AlertCircle, Zap, Award, Sparkles, CheckCircle2, Gift, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSearchParams } from 'react-router-dom';
@@ -20,6 +20,11 @@ export default function AuthPage() {
   const [otpCode, setOtpCode] = useState('');
   const [devOtpHint, setDevOtpHint] = useState('');
   
+  // Password visibility states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
   // Forgot password modal
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -131,8 +136,8 @@ export default function AuthPage() {
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
 
       {!isBackendOnline && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-2xl">
-          <AlertCircle className="w-4 h-4 shrink-0" /> Backend Server Offline. Start Node server on port 5000.
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-2xl backdrop-blur-md">
+          <RefreshCw className="w-4 h-4 shrink-0 animate-spin text-amber-400" /> Connecting to Game Server...
         </div>
       )}
 
@@ -279,13 +284,20 @@ export default function AuthPage() {
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         placeholder="Password"
-                        className="w-full bg-dark-950/80 border border-slate-700/80 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                        className="w-full bg-dark-950/80 border border-slate-700/80 rounded-xl pl-10 pr-10 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors font-mono"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
 
                     <div className="text-right">
@@ -397,13 +409,20 @@ export default function AuthPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showSignupPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="Create Password"
-                    className="w-full bg-dark-950/80 border border-slate-700/80 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-dark-950/80 border border-slate-700/80 rounded-xl pl-10 pr-10 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPassword(!showSignupPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  >
+                    {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
 
                 <div className="relative">
@@ -471,14 +490,23 @@ export default function AuthPage() {
                 required
               />
 
-              <input
-                type="password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder="Enter New Password"
-                className="w-full bg-dark-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="Enter New Password"
+                  className="w-full bg-dark-950 border border-slate-700 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
 
               <div className="flex gap-2 pt-2">
                 <button

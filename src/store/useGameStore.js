@@ -3,7 +3,7 @@ import apiClient from '../api/axios';
 
 const defaultGameState = {
   periodId: 'Loading...',
-  timer: 60,
+  timer: null,
   status: 'BETTING',
   serverSeedHash: ''
 };

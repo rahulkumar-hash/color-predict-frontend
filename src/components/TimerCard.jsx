@@ -4,15 +4,16 @@ import { Clock, ShieldCheck, Lock, Power } from 'lucide-react';
 export default function TimerCard({ gameState = {}, publicConfig = {}, gameMode = 'parity' }) {
   const {
     periodId = '---',
-    timer = 60,
+    timer = null,
     status = 'BETTING',
     serverSeedHash = '',
     roundDuration = 60,
     message = ''
   } = gameState || {};
 
-  const minutes = String(Math.floor((timer || 0) / 60)).padStart(2, '0');
-  const seconds = String((timer || 0) % 60).padStart(2, '0');
+  const isLoadingPeriod = !periodId || periodId === 'Loading...' || periodId === '---';
+  const minutes = timer !== null && timer !== undefined ? String(Math.floor(timer / 60)).padStart(2, '0') : '--';
+  const seconds = timer !== null && timer !== undefined ? String(timer % 60).padStart(2, '0') : '--';
   const isFrozen = status === 'FROZEN';
   const isClosed = status === 'CLOSED';
 

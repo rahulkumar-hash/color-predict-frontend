@@ -2,7 +2,9 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
+import { io } from 'socket.io-client';
 import { useAuthStore } from './store/useAuthStore';
+import { useGameStore } from './store/useGameStore';
 import AuthPage from './pages/AuthPage';
 import GamePage from './pages/GamePage';
 import TrendsPage from './pages/TrendsPage';
@@ -11,12 +13,76 @@ import ProfilePage from './pages/ProfilePage';
 import ReferralPage from './pages/ReferralPage';
 
 export default function App() {
-  const { isAuthenticated, loading, fetchProfile, fetchSysConfig } = useAuthStore();
+  const { user, isAuthenticated, loading, fetchProfile, fetchSysConfig, updateBalance } = useAuthStore();
+  const { setGameState, fetchHistory, fetchMyBets } = useGameStore();
 
   useEffect(() => {
     fetchSysConfig();
     fetchProfile();
   }, []);
+
+  // Global Real-Time Socket Connection for Instant Balance & Game Sync
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const getSocketUrl = () => {
+      if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
+      const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+      const hostname = window.location.hostname || 'localhost';
+      return `${protocol}//${hostname}:5000`;
+    };
+
+    const socket = io(getSocketUrl(), {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000
+    });
+
+    const userId = user?._id || user?.id;
+
+    socket.on('connect', () => {
+      if (userId) {
+        socket.emit('joinUserRoom', userId.toString());
+      }
+    });
+
+    socket.on('gameTick', (data) => {
+      if (data) setGameState(data);
+    });
+
+    socket.on('walletUpdate', (payload) => {
+      if (payload?.balance !== undefined) {
+        updateBalance(payload.balance);
+      }
+      fetchProfile();
+    });
+
+    socket.on('balanceUpdate', (payload) => {
+      if (payload?.balance !== undefined) {
+        updateBalance(payload.balance);
+      }
+      fetchProfile();
+    });
+
+    socket.on('sysConfigUpdate', (payload) => {
+      if (payload) {
+        const updatedConfig = payload.config || payload;
+        const cleanData = updatedConfig._doc || updatedConfig;
+        useAuthStore.setState((state) => ({
+          sysConfig: { ...state.sysConfig, ...cleanData }
+        }));
+      }
+      fetchSysConfig();
+    });
+
+    socket.on('roundResult', () => {
+      fetchHistory();
+      fetchMyBets();
+      fetchProfile();
+    });
+
+    return () => socket.disconnect();
+  }, [isAuthenticated, user?._id, user?.id]);
 
   if (loading) {
     return (

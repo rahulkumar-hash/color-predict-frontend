@@ -4,7 +4,7 @@ import { Gamepad2, TrendingUp, History, ArrowDownRight, User, Gift } from 'lucid
 
 export default function BottomNav({ onOpenDeposit }) {
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-900/95 backdrop-blur-md border-t border-slate-800 px-1 py-2">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-900/95 backdrop-blur-md border-t border-slate-800 px-1 py-2">
       <div className="max-w-md mx-auto flex justify-around items-center">
         <NavLink
           to="/"

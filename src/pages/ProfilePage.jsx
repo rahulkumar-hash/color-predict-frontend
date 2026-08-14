@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, ShieldCheck, KeyRound, LogOut, Camera, Clock, Copy, Laptop, Smartphone, ArrowUpRight, Wallet, ChevronRight, ChevronLeft, Receipt, RefreshCw } from 'lucide-react';
+import { User, ShieldCheck, KeyRound, LogOut, Camera, Clock, Copy, Laptop, Smartphone, ArrowUpRight, Wallet, ChevronRight, ChevronLeft, Receipt, RefreshCw, Gift } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWalletStore } from '../store/useWalletStore';
+import { useReferralStore } from '../store/useReferralStore';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import DepositModal from '../components/DepositModal';
@@ -21,6 +22,7 @@ export default function ProfilePage() {
     transactionsLoading,
     fetchTransactions
   } = useWalletStore();
+  const { referralData, fetchReferralInfo } = useReferralStore();
 
   const navigate = useNavigate();
 
@@ -68,6 +70,7 @@ export default function ProfilePage() {
   useEffect(() => {
     fetchWithdrawalHistory();
     fetchTransactions();
+    fetchReferralInfo();
   }, []);
 
   const loadLoginHistory = async (page = 1) => {
@@ -189,7 +192,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="w-full min-h-screen flex flex-col relative pb-20 md:pb-6 px-3 sm:px-6 lg:px-8 py-3">
+    <div className="min-h-screen pb-24 flex flex-col items-center">
       {/* Header Bar */}
       <Header
         onOpenDeposit={() => setShowDepositModal(true)}
@@ -197,12 +200,13 @@ export default function ProfilePage() {
         onOpenRules={() => setShowRulesModal(true)}
       />  
 
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -15 }}
-        className="space-y-4 w-full flex-1 max-w-7xl mx-auto"
-      >
+      <main className="w-full max-w-7xl px-3 sm:px-6 space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -15 }}
+          className="space-y-4 w-full"
+        >
         <div className="flex items-center justify-between">
           <h2 className="text-base font-black text-white flex items-center gap-2">
             <User className="w-5 h-5 text-emerald-400 shrink-0" /> User Profile & Account Center
@@ -258,19 +262,65 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Referral Banner */}
-          <div className="flex justify-between items-center bg-slate-900/60 p-2.5 sm:p-3 rounded-xl border border-slate-800 text-xs">
-            <span className="text-slate-400 font-bold">Referral Code</span>
-            <span
-              onClick={() => {
-                navigator.clipboard.writeText(user?.referralCode || '');
-                toast.success('Referral code copied!');
-              }}
-              className="font-mono font-bold text-purple-400 flex items-center gap-1 cursor-pointer hover:underline"
-            >
-              {user?.referralCode} <Copy className="w-3 h-3" />
-            </span>
-          </div>
+          {/* Referral Banner & Mobile Logout Action */}
+          {(() => {
+            const referrerBonus = referralData?.settings?.referrerBonus ?? 50;
+            const refereeBonus = referralData?.settings?.refereeBonus ?? 25;
+            const minDeposit = referralData?.settings?.minDepositForBonus ?? 100;
+
+            return (
+              <div className="bg-gradient-to-r from-purple-900/40 via-slate-900 to-slate-900 p-3 sm:p-4 rounded-2xl border border-purple-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0">
+                    <Gift className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-white flex items-center gap-1.5 flex-wrap">
+                      Refer & Earn Program
+                      <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[9px] font-black border border-purple-500/30">
+                        +₹{referrerBonus} You
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-black border border-emerald-500/30">
+                        +₹{refereeBonus} Friend
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Earn ₹{referrerBonus} when friend joins & deposits min ₹{minDeposit}. Friend receives ₹{refereeBonus} welcome bonus!
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <span
+                    onClick={() => {
+                      navigator.clipboard.writeText(user?.referralCode || '');
+                      toast.success('Referral code copied!');
+                    }}
+                    className="font-mono font-bold text-purple-300 bg-purple-500/10 px-3 py-1.5 rounded-xl border border-purple-500/30 flex items-center gap-1.5 text-xs cursor-pointer hover:bg-purple-500/20 btn-touch"
+                  >
+                    {user?.referralCode} <Copy className="w-3.5 h-3.5 text-purple-400" />
+                  </span>
+
+                  <button
+                    onClick={() => navigate('/referral')}
+                    className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs rounded-xl shadow-md btn-touch shrink-0 flex items-center gap-1"
+                  >
+                    Open Hub <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Mobile Sign Out Banner Action (Always visible on mobile) */}
+        <div className="block lg:hidden w-full">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full py-2.5 bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/25 text-rose-400 font-bold text-xs rounded-xl flex items-center justify-center gap-2 btn-touch shadow-sm"
+          >
+            <LogOut className="w-4 h-4" /> Sign Out Account
+          </button>
         </div>
 
         {/* MOBILE HORIZONTAL NAVIGATION TAB BAR (< lg) */}
@@ -772,6 +822,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </motion.div>
+      </main>
 
       {/* Dedicated Modals */}
       <DepositModal
