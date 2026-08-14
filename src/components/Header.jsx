@@ -31,7 +31,7 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
                 C
               </div>
             )}
-            <div className="flex flex-col justify-center">
+            <div className="hidden sm:flex flex-col justify-center">
               <h1 className="font-black text-xs sm:text-base tracking-tight leading-tight text-white drop-shadow-sm">
                 {sysConfig.appName || 'COLOR PREDICT PRO'}
               </h1>
