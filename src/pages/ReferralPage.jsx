@@ -12,6 +12,7 @@ import BottomNav from '../components/BottomNav';
 import DepositModal from '../components/DepositModal';
 import WithdrawalModal from '../components/WithdrawalModal';
 import RulesModal from '../components/RulesModal';
+import SupportModal from '../components/SupportModal';
 
 export default function ReferralPage() {
   const { referralData, loading, applying, fetchReferralInfo, applyReferralCode } = useReferralStore();
@@ -23,6 +24,7 @@ export default function ReferralPage() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   useEffect(() => {
     fetchReferralInfo();
@@ -86,6 +88,7 @@ export default function ReferralPage() {
         onOpenDeposit={() => setShowDepositModal(true)}
         onOpenWithdrawal={() => setShowWithdrawalModal(true)}
         onOpenRules={() => setShowRulesModal(true)}
+        onOpenSupport={() => setShowSupportModal(true)}
       />
 
       <main className="w-full max-w-7xl px-3 sm:px-6 space-y-4">
@@ -354,6 +357,11 @@ export default function ReferralPage() {
       <RulesModal
         isOpen={showRulesModal}
         onClose={() => setShowRulesModal(false)}
+      />
+
+      <SupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
       />
 
       <BottomNav onOpenDeposit={() => setShowDepositModal(true)} />

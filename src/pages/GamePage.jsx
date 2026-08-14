@@ -13,6 +13,7 @@ import TrendChart from '../components/TrendChart';
 import HistoryTable from '../components/HistoryTable';
 import DepositModal from '../components/DepositModal';
 import RulesModal from '../components/RulesModal';
+import SupportModal from '../components/SupportModal';
 import BottomNav from '../components/BottomNav';
 import { vibrateDevice } from '../components/WebViewBridge';
 
@@ -33,6 +34,7 @@ export default function GamePage() {
   const location = useLocation();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   // Real-Time Socket Connection
   useEffect(() => {
@@ -153,6 +155,7 @@ export default function GamePage() {
       <Header
         onOpenDeposit={() => setShowDepositModal(true)}
         onOpenRules={() => setShowRulesModal(true)}
+        onOpenSupport={() => setShowSupportModal(true)}
       />
 
       <main className="w-full max-w-7xl px-3 sm:px-6 space-y-4">
@@ -196,6 +199,11 @@ export default function GamePage() {
       <RulesModal
         isOpen={showRulesModal}
         onClose={() => setShowRulesModal(false)}
+      />
+
+      <SupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
       />
 
       <BottomNav

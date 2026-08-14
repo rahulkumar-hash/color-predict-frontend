@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Wallet, User, HelpCircle, LogOut, Gift } from 'lucide-react';
+import { Wallet, User, HelpCircle, LogOut, Gift, Headphones } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import ConfirmModal from './ConfirmModal';
 
-export default function Header({ onOpenDeposit, onOpenRules }) {
+export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
   const { user, sysConfig, logout } = useAuthStore();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -93,6 +93,15 @@ export default function Header({ onOpenDeposit, onOpenRules }) {
                 ₹{user?.balance?.toFixed(2) || '0.00'}
               </span>
             </div>
+
+            {/* Support Desk Button */}
+            <button
+              onClick={onOpenSupport}
+              className="p-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 text-purple-300 rounded-xl btn-touch"
+              title="24/7 Help & Support Desk"
+            >
+              <Headphones className="w-4 h-4 text-purple-400" />
+            </button>
 
             <button
               onClick={onOpenRules}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, ShieldCheck, KeyRound, LogOut, Camera, Clock, Copy, Laptop, Smartphone, ArrowUpRight, Wallet, ChevronRight, ChevronLeft, Receipt, RefreshCw, Gift } from 'lucide-react';
+import { User, ShieldCheck, KeyRound, LogOut, Camera, Clock, Copy, Laptop, Smartphone, ArrowUpRight, Wallet, ChevronRight, ChevronLeft, Receipt, RefreshCw, Gift, Headphones, MessageCircle, Mail, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWalletStore } from '../store/useWalletStore';
@@ -11,10 +11,11 @@ import BottomNav from '../components/BottomNav';
 import DepositModal from '../components/DepositModal';
 import WithdrawalModal from '../components/WithdrawalModal';
 import RulesModal from '../components/RulesModal';
+import SupportModal from '../components/SupportModal';
 import ConfirmModal from '../components/ConfirmModal';
 
 export default function ProfilePage() {
-  const { user, logout, updateProfile, changePassword, fetchLoginHistory } = useAuthStore();
+  const { user, sysConfig, logout, updateProfile, changePassword, fetchLoginHistory } = useAuthStore();
   const {
     withdrawalHistory,
     fetchWithdrawalHistory,
@@ -31,6 +32,7 @@ export default function ProfilePage() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   // Editable Profile States
   const [fullName, setFullName] = useState(user?.fullName || '');
@@ -198,6 +200,7 @@ export default function ProfilePage() {
         onOpenDeposit={() => setShowDepositModal(true)}
         onOpenWithdrawal={() => setShowWithdrawalModal(true)}
         onOpenRules={() => setShowRulesModal(true)}
+        onOpenSupport={() => setShowSupportModal(true)}
       />  
 
       <main className="w-full max-w-7xl px-3 sm:px-6 space-y-4">
@@ -311,6 +314,40 @@ export default function ProfilePage() {
               </div>
             );
           })()}
+
+          {/* Help & Support Desk Banner Card */}
+          <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 p-3 sm:p-4 rounded-2xl border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                <Headphones className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                  24/7 Customer Help & Support Desk
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-black border border-emerald-500/30">Live 24/7</span>
+                </h4>
+                <p className="text-[11px] text-slate-400">Need help with deposits, withdrawals, or gameplay? Connect instantly.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button
+                onClick={() => {
+                  const num = (sysConfig?.supportWhatsapp || '+919876543210').replace(/[^\d+]/g, '');
+                  window.open(`https://wa.me/${num.replace('+', '')}`, '_blank');
+                }}
+                className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/30 btn-touch flex items-center gap-1"
+              >
+                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+              </button>
+              <button
+                onClick={() => setShowSupportModal(true)}
+                className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl shadow-md btn-touch shrink-0 flex items-center gap-1"
+              >
+                Support Hub <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Mobile Sign Out Banner Action (Always visible on mobile) */}
@@ -838,6 +875,11 @@ export default function ProfilePage() {
       <RulesModal
         isOpen={showRulesModal}
         onClose={() => setShowRulesModal(false)}
+      />
+
+      <SupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
       />
 
       {/* Logout Confirmation Modal */}
