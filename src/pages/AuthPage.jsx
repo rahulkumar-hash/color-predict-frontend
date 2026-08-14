@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Phone, User, KeyRound, ArrowRight, ShieldCheck, AlertCircle, Zap, Award, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Lock, Mail, Phone, User, KeyRound, ArrowRight, ShieldCheck, AlertCircle, Zap, Award, Sparkles, CheckCircle2, Gift } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
+import { useSearchParams } from 'react-router-dom';
 
 export default function AuthPage() {
   const { sendOtp, register, verifyOtpLogin, loginWithPassword, forgotPassword, isBackendOnline } = useAuthStore();
@@ -26,6 +27,16 @@ export default function AuthPage() {
   const [newPassword, setNewPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [referralCode, setReferralCode] = useState('');
+
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode.toUpperCase());
+      setMode('signup');
+    }
+  }, []);
 
   // Handle Send OTP
   const handleSendOtp = async (targetId, purpose) => {
@@ -85,7 +96,7 @@ export default function AuthPage() {
     const toastId = toast.loading('Creating account...');
     setLoading(true);
 
-    const res = await register({ username, email, phone, password });
+    const res = await register({ username, email, phone, password, referralCode: referralCode || undefined });
     setLoading(false);
 
     if (res.success) {
@@ -393,6 +404,23 @@ export default function AuthPage() {
                     className="w-full bg-dark-950/80 border border-slate-700/80 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white focus:outline-none focus:border-emerald-500"
                     required
                   />
+                </div>
+
+                <div className="relative">
+                  <Gift className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={e => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="Referral Code (optional)"
+                    className={`w-full bg-dark-950/80 border rounded-xl pl-10 pr-3.5 py-3 text-xs text-white font-mono focus:outline-none transition-colors ${referralCode ? 'border-purple-500/60 focus:border-purple-400' : 'border-slate-700/80 focus:border-emerald-500'}`}
+                    maxLength={8}
+                  />
+                  {referralCode && (
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-md">
+                      +₹25 Bonus
+                    </span>
+                  )}
                 </div>
 
                 <button

@@ -8,6 +8,7 @@ import GamePage from './pages/GamePage';
 import TrendsPage from './pages/TrendsPage';
 import BetsPage from './pages/BetsPage';
 import ProfilePage from './pages/ProfilePage';
+import ReferralPage from './pages/ReferralPage';
 
 export default function App() {
   const { isAuthenticated, loading, fetchProfile, fetchSysConfig } = useAuthStore();
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/trends" element={<TrendsPage />} />
             <Route path="/bets" element={<BetsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/referral" element={<ReferralPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         ) : (
