@@ -153,18 +153,20 @@ export default function DepositModal({ isOpen, onClose }) {
     }
 
     setCreatingOrder(true);
-    const toastId = toast.loading('Generating Instant UPI Payment Intent...');
+    try {
+      const res = await createPaymentOrder(Number(rechargeAmount), 'AUTOMATED_UPI_GATEWAY');
+      const orderData = res.data?.order || res.data;
 
-    const res = await createPaymentOrder(Number(rechargeAmount), 'AUTOMATED_UPI_GATEWAY');
-    setCreatingOrder(false);
-
-    const orderData = res.data?.order || res.data;
-
-    if (res.success && (orderData?.paymentUrl || orderData?.intentUrl)) {
-      toast.success('Redirecting to UPI Payment App...', { id: toastId });
-      window.location.href = orderData.paymentUrl || orderData.intentUrl;
-    } else {
-      toast.error(res.error || 'Failed to generate UPI payment link', { id: toastId });
+      if (res.success && (orderData?.paymentUrl || orderData?.intentUrl)) {
+        // Direct seamless redirection without annoying toast popups
+        window.location.href = orderData.paymentUrl || orderData.intentUrl;
+      } else {
+        setCreatingOrder(false);
+        toast.error(res.error || 'Failed to generate UPI payment link');
+      }
+    } catch (err) {
+      setCreatingOrder(false);
+      toast.error('Payment gateway error. Please try again.');
     }
   };
 
@@ -262,7 +264,17 @@ export default function DepositModal({ isOpen, onClose }) {
               disabled={creatingOrder}
               className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-purple-600/20 btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <Zap className="w-4 h-4" /> {creatingOrder ? 'Generating Link...' : `Pay ₹${rechargeAmount} via UPI App`}
+              {creatingOrder ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-purple-200" />
+                  <span>Connecting to Payment Gateway...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4" />
+                  <span>Pay ₹{rechargeAmount} via Instant UPI App</span>
+                </>
+              )}
             </button>
           </div>
         )}

@@ -19,19 +19,25 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
       <header className="sticky top-0 z-50 w-full bg-[#070b14]/95 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 lg:px-8 py-2.5 shadow-xl transition-all mb-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           {/* Brand Logo & Name */}
-          <div className="flex items-center gap-2 sm:gap-2.5 cursor-pointer shrink-0" onClick={() => navigate('/')}>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-tr from-emerald-400 via-purple-500 to-rose-500 rounded-xl flex items-center justify-center font-black text-sm sm:text-lg text-white shadow-md shadow-emerald-500/20 shrink-0">
-              {sysConfig.appLogoUrl ? (
-                <img src={sysConfig.appLogoUrl} alt="Logo" className="w-full h-full object-cover rounded-xl" />
-              ) : (
-                'C'
-              )}
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="font-extrabold text-xs sm:text-base tracking-tight leading-tight text-white">
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer shrink-0" onClick={() => navigate('/')}>
+            {sysConfig.appLogoUrl ? (
+              <img
+                src={sysConfig.appLogoUrl}
+                alt={sysConfig.appName || 'Logo'}
+                className="h-8 sm:h-10 w-auto max-w-[120px] sm:max-w-[160px] object-contain shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-tr from-emerald-400 via-purple-500 to-rose-500 rounded-xl flex items-center justify-center font-black text-sm sm:text-lg text-white shadow-md shadow-emerald-500/20 shrink-0">
+                C
+              </div>
+            )}
+            <div className="flex flex-col justify-center">
+              <h1 className="font-black text-xs sm:text-base tracking-tight leading-tight text-white drop-shadow-sm">
                 {sysConfig.appName || 'COLOR PREDICT PRO'}
               </h1>
-              <span className="text-[9px] sm:text-[10px] text-emerald-400 font-bold block leading-none">Provably Fair Arena</span>
+              <span className="text-[9px] sm:text-[10px] text-emerald-400 font-extrabold block leading-none">
+                Provably Fair Arena
+              </span>
             </div>
           </div>
 
