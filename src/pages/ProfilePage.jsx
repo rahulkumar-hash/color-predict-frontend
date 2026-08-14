@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { User, ShieldCheck, KeyRound, LogOut, Camera, Clock, Copy, Laptop, Smartphone, ArrowUpRight, Wallet, ChevronRight, ChevronLeft, Receipt, RefreshCw, Gift, Headphones, MessageCircle, Mail, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
@@ -27,8 +27,16 @@ export default function ProfilePage() {
   const { referralData, fetchReferralInfo } = useReferralStore();
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tabQuery = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState('details'); // 'details', 'transactions', 'payouts', 'history', 'security'
+  const [activeTab, setActiveTab] = useState(tabQuery || 'details'); // 'details', 'transactions', 'payouts', 'history', 'security'
+
+  useEffect(() => {
+    if (tabQuery && ['details', 'transactions', 'payouts', 'history', 'security'].includes(tabQuery)) {
+      setActiveTab(tabQuery);
+    }
+  }, [tabQuery]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Wallet, User, HelpCircle, LogOut, Gift, Headphones } from 'lucide-react';
+import { Wallet, User, HelpCircle, LogOut, Gift, Headphones, Menu } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import ConfirmModal from './ConfirmModal';
+import MobileSidebar from './MobileSidebar';
 
 export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
   const { user, sysConfig, logout } = useAuthStore();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -16,32 +18,48 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-[#070b14]/95 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 lg:px-8 py-2.5 shadow-xl transition-all mb-4">
+      <header className="sticky top-0 z-40 w-full bg-[#070b14]/95 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 lg:px-8 py-2.5 shadow-xl transition-all mb-3 sm:mb-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          {/* Brand Logo & Name */}
-          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer shrink-0" onClick={() => navigate('/')}>
-            {sysConfig.appLogoUrl ? (
-              <img
-                src={sysConfig.appLogoUrl}
-                alt={sysConfig.appName || 'Logo'}
-                className="h-8 sm:h-10 w-auto max-w-[120px] sm:max-w-[160px] object-contain shrink-0"
-              />
-            ) : (
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-tr from-emerald-400 via-purple-500 to-rose-500 rounded-xl flex items-center justify-center font-black text-sm sm:text-lg text-white shadow-md shadow-emerald-500/20 shrink-0">
-                C
+          {/* Left: Mobile Menu Icon + Brand Logo & Name */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Hamburger Menu Button - ONLY Visible on Mobile/Tablet (< lg) */}
+            <button
+              onClick={() => setShowMobileSidebar(true)}
+              className="lg:hidden p-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white rounded-xl transition-all btn-touch"
+              title="Open Navigation Menu"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="w-5 h-5 text-emerald-400" />
+            </button>
+
+            {/* Brand Logo & Name */}
+            <div
+              className="flex items-center gap-2 sm:gap-3 cursor-pointer shrink-0"
+              onClick={() => navigate('/')}
+            >
+              {sysConfig.appLogoUrl ? (
+                <img
+                  src={sysConfig.appLogoUrl}
+                  alt={sysConfig.appName || 'Logo'}
+                  className="h-8 sm:h-10 w-auto max-w-[120px] sm:max-w-[160px] object-contain shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-tr from-emerald-400 via-purple-500 to-rose-500 rounded-xl flex items-center justify-center font-black text-sm sm:text-lg text-white shadow-md shadow-emerald-500/20 shrink-0">
+                  C
+                </div>
+              )}
+              <div className="hidden sm:flex flex-col justify-center">
+                <h1 className="font-black text-xs sm:text-base tracking-tight leading-tight text-white drop-shadow-sm">
+                  {sysConfig.appName || 'COLOR PREDICT PRO'}
+                </h1>
+                <span className="text-[9px] sm:text-[10px] text-emerald-400 font-extrabold block leading-none">
+                  Provably Fair Arena
+                </span>
               </div>
-            )}
-            <div className="hidden sm:flex flex-col justify-center">
-              <h1 className="font-black text-xs sm:text-base tracking-tight leading-tight text-white drop-shadow-sm">
-                {sysConfig.appName || 'COLOR PREDICT PRO'}
-              </h1>
-              <span className="text-[9px] sm:text-[10px] text-emerald-400 font-extrabold block leading-none">
-                Provably Fair Arena
-              </span>
             </div>
           </div>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop Navigation Links - ONLY Visible on Desktop/Laptop (lg:flex) */}
           <nav className="hidden lg:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs font-bold">
             <NavLink
               to="/"
@@ -86,9 +104,9 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
             </NavLink>
           </nav>
 
-          {/* Wallet Balance & Action Controls */}
+          {/* Right Action Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Wallet Balance Badge */}
+            {/* Wallet Balance Badge - ALWAYS VISIBLE on Both Mobile & Desktop */}
             <div
               onClick={onOpenDeposit}
               className="flex cursor-pointer items-center gap-1.5 bg-slate-900/90 px-2.5 sm:px-3 py-1.5 rounded-xl border border-amber-500/30 text-xs font-bold transition-all hover:border-amber-400 hover:bg-slate-800/80 btn-touch shadow-sm"
@@ -100,10 +118,10 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
               </span>
             </div>
 
-            {/* Support Desk Button */}
+            {/* Desktop Only Controls: Support, Help, Profile, Logout */}
             <button
               onClick={onOpenSupport}
-              className="p-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 text-purple-300 rounded-xl btn-touch"
+              className="hidden lg:flex p-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 text-purple-300 rounded-xl btn-touch"
               title="24/7 Help & Support Desk"
             >
               <Headphones className="w-4 h-4 text-purple-400" />
@@ -111,7 +129,7 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
 
             <button
               onClick={onOpenRules}
-              className="hidden sm:flex p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl btn-touch"
+              className="hidden lg:flex p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl btn-touch"
               title="Game Rules"
             >
               <HelpCircle className="w-4 h-4" />
@@ -119,16 +137,15 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
 
             <button
               onClick={() => navigate('/profile')}
-              className="p-2 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-300 rounded-xl btn-touch"
+              className="hidden lg:flex p-2 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-300 rounded-xl btn-touch"
               title="My Profile"
             >
               <User className="w-4 h-4" />
             </button>
 
-            {/* Desktop & Tablet Logout Button */}
             <button
               onClick={() => setShowLogoutConfirm(true)}
-              className="hidden sm:flex p-2 bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/30 text-rose-400 rounded-xl btn-touch"
+              className="hidden lg:flex p-2 bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/30 text-rose-400 rounded-xl btn-touch"
               title="Log Out"
             >
               <LogOut className="w-4 h-4" />
@@ -137,6 +154,17 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
         </div>
       </header>
 
+      {/* Mobile Slide-Over Sidebar Drawer */}
+      <MobileSidebar
+        isOpen={showMobileSidebar}
+        onClose={() => setShowMobileSidebar(false)}
+        onOpenDeposit={onOpenDeposit}
+        onOpenRules={onOpenRules}
+        onOpenSupport={onOpenSupport}
+        onRequestLogout={() => setShowLogoutConfirm(true)}
+      />
+
+      {/* Sign Out Confirmation Modal */}
       <ConfirmModal
         isOpen={showLogoutConfirm}
         title="Sign Out Confirmation"
