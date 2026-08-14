@@ -1,0 +1,50 @@
+name: Deploy Frontend App
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    name: Deploy Frontend to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          command_timeout: 15m
+          script: |
+            set -e
+            echo "🚀 Starting Frontend App Deployment..."
+
+            cd /var/www/COLORPREDICT-FRONTEND
+
+            echo "📦 Pulling latest main branch..."
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "🔨 Building Frontend Docker Image..."
+            docker build \
+              --build-arg VITE_API_URL=http://160.191.14.113:5000 \
+              -t colorpredict-frontend:latest .
+
+            echo "🔄 Swapping Frontend container..."
+            docker stop colorpredict-frontend || true
+            docker rm colorpredict-frontend || true
+
+            echo "🚀 Launching new Frontend container..."
+            docker run -d \
+              --restart always \
+              --name colorpredict-frontend \
+              --network colorpredict-network \
+              -p 5002:80 \
+              colorpredict-frontend:latest
+
+            echo "✅ Frontend App Successfully Deployed!"
