@@ -18,7 +18,6 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
-  const [devOtpHint, setDevOtpHint] = useState('');
   
   // Password visibility states
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +56,6 @@ export default function AuthPage() {
 
     if (res.success) {
       toast.success(res.message, { id: toastId });
-      if (res.otpCode) setDevOtpHint(`Dev OTP: ${res.otpCode}`);
     } else {
       toast.error(res.error, { id: toastId });
     }
@@ -242,12 +240,6 @@ export default function AuthPage() {
                 Register
               </button>
             </div>
-
-            {devOtpHint && (
-              <div className="bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs p-2.5 rounded-xl font-mono text-center">
-                {devOtpHint}
-              </div>
-            )}
 
             {/* LOGIN FORM */}
             {mode === 'login' && (
