@@ -11,6 +11,10 @@ import TrendsPage from './pages/TrendsPage';
 import BetsPage from './pages/BetsPage';
 import ProfilePage from './pages/ProfilePage';
 import ReferralPage from './pages/ReferralPage';
+import TransactionsPage from './pages/TransactionsPage';
+import WithdrawalsPage from './pages/WithdrawalsPage';
+import SecurityPage from './pages/SecurityPage';
+import LoginHistoryPage from './pages/LoginHistoryPage';
 
 export default function App() {
   const { user, isAuthenticated, loading, fetchProfile, fetchSysConfig, updateBalance } = useAuthStore();
@@ -117,6 +121,13 @@ export default function App() {
             <Route path="/bets" element={<BetsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/referral" element={<ReferralPage />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/withdrawals" element={<WithdrawalsPage />} />
+            <Route path="/payouts" element={<WithdrawalsPage />} />
+            <Route path="/security" element={<SecurityPage />} />
+            <Route path="/change-password" element={<SecurityPage />} />
+            <Route path="/login-history" element={<LoginHistoryPage />} />
+            <Route path="/sessions" element={<LoginHistoryPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         ) : (

@@ -86,7 +86,7 @@ export default function MobileSidebar({
                       {sysConfig.appName || 'COLOR PREDICT'}
                     </span>
                     <span className="text-[9px] text-emerald-400 font-extrabold flex items-center gap-1">
-                      <Sparkles className="w-2.5 h-2.5" /> Fair Play
+                      <Sparkles className="w-2.5 h-2.5" /> Fair Play Arena
                     </span>
                   </div>
                 </div>
@@ -101,7 +101,10 @@ export default function MobileSidebar({
               </div>
 
               {/* User Identity Banner */}
-              <div className="p-3 bg-gradient-to-r from-slate-900 via-slate-900/90 to-purple-950/40 rounded-2xl border border-slate-800/90 flex items-center gap-3">
+              <div
+                onClick={() => handleNav('/profile')}
+                className="p-3 bg-gradient-to-r from-slate-900 via-slate-900/90 to-purple-950/40 rounded-2xl border border-slate-800/90 flex items-center gap-3 cursor-pointer hover:border-purple-500/40 transition-colors"
+              >
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-emerald-500 p-0.5 shrink-0 shadow-md">
                   {user?.avatarUrl ? (
                     <img
@@ -135,12 +138,12 @@ export default function MobileSidebar({
               </div>
             </div>
 
-            {/* Scrollable Navigation & Profile Tabs */}
+            {/* Scrollable Navigation & Separate Pages */}
             <div className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
               {/* SECTION 1: MAIN GAMEPLAY & BETS */}
               <div>
                 <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-2 mb-1.5">
-                  Navigation
+                  Main Navigation
                 </div>
                 <div className="space-y-1">
                   <button
@@ -208,20 +211,24 @@ export default function MobileSidebar({
                 </div>
               </div>
 
-              {/* SECTION 2: PROFILE & WALLET TABS (Shifted from Profile Page) */}
+              {/* SECTION 2: SEPARATE ACCOUNT & WALLET PAGES */}
               <div>
                 <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-2 mb-1.5 flex items-center justify-between">
-                  <span>Profile & Account</span>
-                  <span className="text-[9px] text-purple-400 lowercase">all tabs</span>
+                  <span>Account & Services</span>
+                  <span className="text-[9px] text-emerald-400 lowercase">pages</span>
                 </div>
                 <div className="space-y-1">
                   <button
-                    onClick={() => handleNav('/profile?tab=details')}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800/60 font-medium"
+                    onClick={() => handleNav('/profile')}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                      location.pathname === '/profile'
+                        ? 'bg-slate-800 text-white font-bold'
+                        : 'text-slate-300 hover:bg-slate-800/60 font-medium'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <User className="w-4 h-4 text-purple-400" />
-                      <span>Account Details</span>
+                      <span>Account Profile</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-50" />
                   </button>
@@ -238,8 +245,12 @@ export default function MobileSidebar({
                   </button>
 
                   <button
-                    onClick={() => handleNav('/profile?tab=payouts')}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-rose-300 hover:bg-rose-950/30 font-semibold"
+                    onClick={() => handleNav('/withdrawals')}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                      location.pathname === '/withdrawals' || location.pathname === '/payouts'
+                        ? 'bg-slate-800 text-rose-300 font-bold'
+                        : 'text-rose-300 hover:bg-rose-950/30 font-semibold'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <ArrowUpRight className="w-4 h-4 text-rose-400" />
@@ -249,30 +260,27 @@ export default function MobileSidebar({
                   </button>
 
                   <button
-                    onClick={() => handleNav('/profile?tab=transactions')}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800/60 font-medium"
+                    onClick={() => handleNav('/transactions')}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                      location.pathname === '/transactions'
+                        ? 'bg-slate-800 text-white font-bold'
+                        : 'text-slate-300 hover:bg-slate-800/60 font-medium'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <Receipt className="w-4 h-4 text-slate-400" />
-                      <span>Deposit History / Ledger</span>
+                      <span>Transaction Ledger</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-50" />
                   </button>
 
                   <button
-                    onClick={() => handleNav('/profile?tab=payouts')}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800/60 font-medium"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Wallet className="w-4 h-4 text-slate-400" />
-                      <span>Withdrawal Records</span>
-                    </div>
-                    <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                  </button>
-
-                  <button
-                    onClick={() => handleNav('/profile?tab=security')}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800/60 font-medium"
+                    onClick={() => handleNav('/security')}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                      location.pathname === '/security'
+                        ? 'bg-slate-800 text-white font-bold'
+                        : 'text-slate-300 hover:bg-slate-800/60 font-medium'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <KeyRound className="w-4 h-4 text-amber-400" />
@@ -282,8 +290,12 @@ export default function MobileSidebar({
                   </button>
 
                   <button
-                    onClick={() => handleNav('/profile?tab=history')}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800/60 font-medium"
+                    onClick={() => handleNav('/login-history')}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                      location.pathname === '/login-history'
+                        ? 'bg-slate-800 text-white font-bold'
+                        : 'text-slate-300 hover:bg-slate-800/60 font-medium'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <Clock className="w-4 h-4 text-sky-400" />
