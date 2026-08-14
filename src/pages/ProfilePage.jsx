@@ -23,7 +23,8 @@ import {
   MessageCircle,
   Mail,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  ArrowUpLeftFromSquareIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
@@ -252,7 +253,7 @@ export default function ProfilePage() {
               onClick={() => navigate('/')}
               className="text-xs text-slate-400 hover:text-white font-bold bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl btn-touch"
             >
-              ← Game Arena
+           <ChevronLeft size={16} />
             </button>
           </div>
 
@@ -300,45 +301,6 @@ export default function ProfilePage() {
                   <ArrowUpRight className="w-3.5 h-3.5" /> Request Cashout
                 </button>
               </div>
-            </div>
-
-            {/* MOBILE QUICK NAVIGATION CARDS (< lg) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800 lg:hidden">
-              <button
-                onClick={() => navigate('/transactions')}
-                className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-left hover:border-slate-700 btn-touch flex flex-col gap-1"
-              >
-                <Receipt className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-bold text-white leading-tight">Transactions</span>
-                <span className="text-[10px] text-slate-400">Wallet ledger</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/withdrawals')}
-                className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-left hover:border-slate-700 btn-touch flex flex-col gap-1"
-              >
-                <ArrowUpRight className="w-4 h-4 text-rose-400" />
-                <span className="text-xs font-bold text-white leading-tight">Withdrawals</span>
-                <span className="text-[10px] text-slate-400">Payout records</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/security')}
-                className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-left hover:border-slate-700 btn-touch flex flex-col gap-1"
-              >
-                <KeyRound className="w-4 h-4 text-amber-400" />
-                <span className="text-xs font-bold text-white leading-tight">Security</span>
-                <span className="text-[10px] text-slate-400">Change PIN/Pass</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/login-history')}
-                className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-left hover:border-slate-700 btn-touch flex flex-col gap-1"
-              >
-                <Clock className="w-4 h-4 text-sky-400" />
-                <span className="text-xs font-bold text-white leading-tight">Sessions</span>
-                <span className="text-[10px] text-slate-400">Login devices</span>
-              </button>
             </div>
 
             {/* Referral Banner */}
@@ -925,7 +887,7 @@ export default function ProfilePage() {
         onCancel={() => setShowLogoutConfirm(false)}
       />
 
-      {/* Mobile Bottom Navigation */}
+      
       <BottomNav onOpenDeposit={() => setShowDepositModal(true)} />
     </div>
   );
