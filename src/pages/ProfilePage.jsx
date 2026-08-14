@@ -13,6 +13,7 @@ import WithdrawalModal from '../components/WithdrawalModal';
 import RulesModal from '../components/RulesModal';
 import SupportModal from '../components/SupportModal';
 import ConfirmModal from '../components/ConfirmModal';
+import DailyStreakCard from '../components/DailyStreakCard';
 
 export default function ProfilePage() {
   const { user, sysConfig, logout, updateProfile, changePassword, fetchLoginHistory } = useAuthStore();
@@ -349,6 +350,9 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Daily Recharge Task & Reward Streak Card (Temporarily commented out on frontend) */}
+        {/* <DailyStreakCard onOpenDeposit={() => setShowDepositModal(true)} /> */}
 
         {/* Mobile Sign Out Banner Action (Always visible on mobile) */}
         <div className="block lg:hidden w-full">

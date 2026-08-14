@@ -14,10 +14,16 @@ export default function WithdrawalModal({ isOpen, onClose }) {
   const [withdrawAmount, setWithdrawAmount] = useState(200);
   const [withdrawUpi, setWithdrawUpi] = useState('');
 
+  const minWithdrawal = sysConfig.minWithdrawalAmount ?? 100;
+
   const handleWithdrawSubmit = async (e) => {
     e.preventDefault();
     if (!sysConfig.withdrawalsEnabled) {
       toast.error('Withdrawals are currently disabled by Admin');
+      return;
+    }
+    if (withdrawAmount < minWithdrawal) {
+      toast.error(`Minimum withdrawal amount is ₹${minWithdrawal}`);
       return;
     }
     if (withdrawAmount > (user?.balance || 0)) {
@@ -73,10 +79,13 @@ export default function WithdrawalModal({ isOpen, onClose }) {
 
         <form onSubmit={handleWithdrawSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-300">Withdrawal Amount (₹)</label>
+            <div className="flex justify-between items-center text-xs font-bold text-slate-300">
+              <span>Withdrawal Amount (₹)</span>
+              <span className="text-[10px] text-amber-400 font-mono">Min Limit: ₹{minWithdrawal}</span>
+            </div>
             <input
               type="number"
-              min="100"
+              min={minWithdrawal}
               max={user?.balance || 0}
               value={withdrawAmount}
               onChange={e => setWithdrawAmount(Number(e.target.value))}

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import apiClient from '../api/axios';
+import { useAuthStore } from './useAuthStore';
 
 const defaultGameState = {
   periodId: 'Loading...',
@@ -77,6 +78,14 @@ export const useGameStore = create((set, get) => ({
     try {
       const res = await apiClient.post('/v1/game/bet', betData);
       get().fetchMyBets();
+
+      const newBal = res.data?.data?.newBalance;
+      if (newBal !== undefined) {
+        useAuthStore.getState().updateBalance(newBal);
+      } else {
+        useAuthStore.getState().fetchProfile();
+      }
+
       return { success: true, message: res.data?.message || 'Bet placed successfully!', data: res.data?.data };
     } catch (err) {
       return { success: false, error: err.response?.data?.message || 'Failed to place bet' };
