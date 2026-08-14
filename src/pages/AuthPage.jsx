@@ -220,7 +220,7 @@ export default function AuthPage() {
             <p className="text-xs text-slate-400 font-medium">Real-World Gaming Platform</p>
           </div>
 
-          <div className="glass-card-premium space-y-5">
+          <div className="glass-card-premium p-6 sm:p-8 space-y-5">
             {/* Tab Switcher: Login vs Signup */}
             <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
               <button

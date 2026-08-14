@@ -73,93 +73,97 @@ export default function BetModal({ isOpen, betInfo, onClose, onSuccess }) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="glass-card max-w-xl w-full mx-auto space-y-4 relative overflow-hidden"
+          className="glass-card max-w-md w-full max-h-[85vh] flex flex-col mx-auto relative overflow-hidden"
           onClick={e => e.stopPropagation()}
         >
-        <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            {getSelectionBadge()}
-            <span className="text-xs font-black text-white">{getSelectionTitle()}</span>
-          </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg btn-touch">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Contract Money Selection */}
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Contract Money Unit (₹)</label>
-          <div className="grid grid-cols-4 gap-2">
-            {[10, 50, 100, 1000].map(amt => (
-              <button
-                key={amt}
-                type="button"
-                onClick={() => setContractMoney(amt)}
-                className={`py-2 rounded-xl text-xs font-mono font-black border transition-all btn-touch ${
-                  contractMoney === amt
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20'
-                    : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
-                }`}
-              >
-                ₹{amt}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Multiplier Selector */}
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Contract Multiplier</label>
-          <div className="flex items-center justify-between bg-slate-900/90 p-2 rounded-xl border border-slate-800">
-            <button
-              type="button"
-              onClick={() => setMultiplier(m => Math.max(1, m - 1))}
-              className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-lg btn-touch flex items-center justify-center"
-            >
-              -
-            </button>
-            <span className="font-mono font-black text-base text-emerald-400">{multiplier}X</span>
-            <button
-              type="button"
-              onClick={() => setMultiplier(m => m + 1)}
-              className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-lg btn-touch flex items-center justify-center"
-            >
-              +
+          {/* Fixed Header */}
+          <div className="flex justify-between items-center pb-3 border-b border-slate-800 shrink-0">
+            <div className="flex items-center gap-2">
+              {getSelectionBadge()}
+              <span className="text-xs font-black text-white">{getSelectionTitle()}</span>
+            </div>
+            <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg btn-touch">
+              <X className="w-5 h-5" />
             </button>
           </div>
-        </div>
 
-        {/* Quick Multiplier Presets */}
-        <div className="flex gap-2">
-          {[1, 5, 10, 20, 50].map(m => (
+          {/* Scrollable Body */}
+          <div className="overflow-y-auto custom-scrollbar flex-1 space-y-4 pt-3 pr-0.5">
+            {/* Contract Money Selection */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Contract Money Unit (₹)</label>
+              <div className="grid grid-cols-4 gap-2">
+                {[10, 50, 100, 1000].map(amt => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setContractMoney(amt)}
+                    className={`py-2 rounded-xl text-xs font-mono font-black border transition-all btn-touch ${
+                      contractMoney === amt
+                        ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20'
+                        : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    ₹{amt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Multiplier Selector */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Contract Multiplier</label>
+              <div className="flex items-center justify-between bg-slate-900/90 p-2 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setMultiplier(m => Math.max(1, m - 1))}
+                  className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-lg btn-touch flex items-center justify-center"
+                >
+                  -
+                </button>
+                <span className="font-mono font-black text-base text-emerald-400">{multiplier}X</span>
+                <button
+                  type="button"
+                  onClick={() => setMultiplier(m => m + 1)}
+                  className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-lg btn-touch flex items-center justify-center"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Multiplier Presets */}
+            <div className="flex gap-2">
+              {[1, 5, 10, 20, 50].map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMultiplier(m)}
+                  className={`flex-1 py-1 rounded-lg text-[10px] font-mono font-bold border transition-all ${
+                    multiplier === m ? 'bg-purple-600 text-white border-purple-400' : 'bg-slate-900 text-slate-400 border-slate-800'
+                  }`}
+                >
+                  {m}X
+                </button>
+              ))}
+            </div>
+
+            {/* Total Cost Summary */}
+            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex justify-between items-center text-xs">
+              <span className="text-slate-400 font-bold">Total Bet Amount:</span>
+              <span className="text-amber-400 font-mono font-black text-sm">₹{totalAmount}</span>
+            </div>
+
             <button
-              key={m}
-              type="button"
-              onClick={() => setMultiplier(m)}
-              className={`flex-1 py-1 rounded-lg text-[10px] font-mono font-bold border transition-all ${
-                multiplier === m ? 'bg-purple-600 text-white border-purple-400' : 'bg-slate-900 text-slate-400 border-slate-800'
-              }`}
+              onClick={handleConfirmBet}
+              disabled={submitting || totalAmount > (user?.balance || 0)}
+              className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {m}X
+              <Zap className="w-4 h-4" /> {submitting ? 'Confirming Bet...' : `Confirm Bet ₹${totalAmount}`}
             </button>
-          ))}
-        </div>
-
-        {/* Total Cost Summary */}
-        <div className="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex justify-between items-center text-xs">
-          <span className="text-slate-400 font-bold">Total Bet Amount:</span>
-          <span className="text-amber-400 font-mono font-black text-sm">₹{totalAmount}</span>
-        </div>
-
-        <button
-          onClick={handleConfirmBet}
-          disabled={submitting || totalAmount > (user?.balance || 0)}
-          className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          <Zap className="w-4 h-4" /> {submitting ? 'Confirming Bet...' : `Confirm Bet ₹${totalAmount}`}
-        </button>
-      </motion.div>
-    </div>
+          </div>
+        </motion.div>
+      </div>
     </AnimatePresence>
   );
 }

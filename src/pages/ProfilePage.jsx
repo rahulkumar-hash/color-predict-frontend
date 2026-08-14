@@ -258,133 +258,153 @@ export default function ProfilePage() {
           </div>
 
           {/* TOP USER PROFILE BANNER CARD */}
-          <div className="glass-card p-4 sm:p-5 space-y-4 w-full border border-slate-800">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className="relative group shrink-0">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-purple-600 flex items-center justify-center font-black text-xl sm:text-2xl text-white shadow-xl overflow-hidden border-2 border-slate-700">
-                    {avatarPreview ? (
-                      <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      user?.username?.charAt(0).toUpperCase() || 'U'
-                    )}
-                  </div>
-                  <label className="absolute -bottom-1 -right-1 p-1 sm:p-1.5 bg-purple-600 text-white rounded-lg cursor-pointer hover:bg-purple-500 shadow-md btn-touch">
-                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <input type="file" onChange={handleImageChange} className="hidden" accept="image/*" />
-                  </label>
+          <div className="glass-card p-4 sm:p-5 space-y-3.5 w-full border border-slate-800">
+            {/* Top Info Row */}
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="relative group shrink-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-purple-600 flex items-center justify-center font-black text-xl sm:text-2xl text-white shadow-xl overflow-hidden border-2 border-slate-700">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    user?.username?.charAt(0).toUpperCase() || 'U'
+                  )}
                 </div>
-
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-black text-white truncate">
-                      {user?.fullName || user?.username}
-                    </h3>
-                    <span className="px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-0.5 shrink-0">
-                      <ShieldCheck className="w-3 h-3" /> VERIFIED
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400 font-mono">@{user?.username}</p>
-                </div>
+                <label className="absolute -bottom-1 -right-1 p-1 sm:p-1.5 bg-purple-600 text-white rounded-lg cursor-pointer hover:bg-purple-500 shadow-md btn-touch">
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <input type="file" onChange={handleImageChange} className="hidden" accept="image/*" />
+                </label>
               </div>
 
-              {/* Wallet Balance & Action Controls */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="text-xs text-amber-400 font-mono font-bold bg-amber-400/10 px-3 py-1.5 rounded-xl border border-amber-400/20 flex items-center gap-1.5">
-                  <Wallet className="w-3.5 h-3.5 text-amber-400" />
-                  <span>₹{user?.balance?.toFixed(2) || '0.00'}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-white truncate">
+                    {user?.fullName || user?.username}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-0.5 shrink-0">
+                    <ShieldCheck className="w-3 h-3" /> VERIFIED
+                  </span>
                 </div>
-                <button
-                  onClick={() => setShowWithdrawalModal(true)}
-                  className="px-3.5 py-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-xl text-xs font-bold hover:bg-emerald-500/30 btn-touch flex items-center gap-1"
-                >
-                  <ArrowUpRight className="w-3.5 h-3.5" /> Request Cashout
-                </button>
+                <p className="text-xs text-slate-400 font-mono mt-0.5">@{user?.username}</p>
               </div>
             </div>
 
-            {/* Referral Banner */}
-            {(() => {
-              const referrerBonus = referralData?.settings?.referrerBonus ?? 50;
-              const refereeBonus = referralData?.settings?.refereeBonus ?? 25;
-              const minDeposit = referralData?.settings?.minDepositForBonus ?? 100;
+            {/* Wallet Balance & Action Row */}
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+              <div className="bg-slate-900/90 border border-amber-500/30 px-3 py-2 rounded-xl flex items-center justify-center gap-2 shadow-sm">
+                <Wallet className="w-4 h-4 text-amber-400 shrink-0" />
+                <div className="min-w-0 text-center">
+                  <span className="text-[9px] text-slate-400 font-bold block leading-none">Wallet</span>
+                  <span className="text-xs sm:text-sm font-black text-amber-400 font-mono">
+                    ₹{user?.balance?.toFixed(2) || '0.00'}
+                  </span>
+                </div>
+              </div>
 
-              return (
-                <div className="bg-gradient-to-r from-purple-900/40 via-slate-900 to-slate-900 p-3 sm:p-4 rounded-2xl border border-purple-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0">
-                      <Gift className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-black text-white flex items-center gap-1.5 flex-wrap">
-                        Refer & Earn Program
+              <button
+                onClick={() => setShowWithdrawalModal(true)}
+                className="px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs rounded-xl shadow-md btn-touch flex items-center justify-center gap-1.5"
+              >
+                <ArrowUpRight className="w-4 h-4" /> Request Cashout
+              </button>
+            </div>
+          </div>
+
+          {/* Referral Banner */}
+          {(() => {
+            const referrerBonus = referralData?.settings?.referrerBonus ?? 50;
+            const refereeBonus = referralData?.settings?.refereeBonus ?? 25;
+            const minDeposit = referralData?.settings?.minDepositForBonus ?? 100;
+
+            return (
+              <div className="bg-gradient-to-br from-purple-950/40 via-slate-900 to-slate-900 p-3.5 sm:p-4 rounded-2xl border border-purple-500/30 space-y-3">
+                {/* Top row with icon & title */}
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0 mt-0.5">
+                    <Gift className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                      <h4 className="text-xs sm:text-sm font-black text-white">Refer & Earn Program</h4>
+                      {/* Reward Badges */}
+                      <div className="flex items-center gap-1 shrink-0">
                         <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[9px] font-black border border-purple-500/30">
                           +₹{referrerBonus} You
                         </span>
                         <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-black border border-emerald-500/30">
                           +₹{refereeBonus} Friend
                         </span>
-                      </h4>
-                      <p className="text-[11px] text-slate-400">
-                        Earn ₹{referrerBonus} per active invite. Friend gets ₹{refereeBonus} welcome bonus!
-                      </p>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    <span
-                      onClick={() => {
-                        navigator.clipboard.writeText(user?.referralCode || '');
-                        toast.success('Referral code copied!');
-                      }}
-                      className="font-mono font-bold text-purple-300 bg-purple-500/10 px-3 py-1.5 rounded-xl border border-purple-500/30 flex items-center gap-1.5 text-xs cursor-pointer hover:bg-purple-500/20 btn-touch"
-                    >
-                      {user?.referralCode} <Copy className="w-3.5 h-3.5 text-purple-400" />
-                    </span>
-
-                    <button
-                      onClick={() => navigate('/referral')}
-                      className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs rounded-xl shadow-md btn-touch shrink-0 flex items-center gap-1"
-                    >
-                      Hub <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Earn ₹{referrerBonus} per active invite. Friend gets ₹{refereeBonus} welcome bonus!
+                    </p>
                   </div>
                 </div>
-              );
-            })()}
 
-            {/* Help & Support Desk Banner Card */}
-            <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 p-3 sm:p-4 rounded-2xl border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
-                  <Headphones className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-white flex items-center gap-1.5">
-                    24/7 Customer Help & Support
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-black border border-emerald-500/30">Live 24/7</span>
-                  </h4>
-                  <p className="text-[11px] text-slate-400">Need help with deposits or withdrawals? Connect instantly.</p>
+                {/* Action Row - 2 Columns */}
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-purple-500/20">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(user?.referralCode || '');
+                      toast.success('Referral code copied!');
+                    }}
+                    className="w-full font-mono font-bold text-purple-200 bg-purple-500/15 hover:bg-purple-500/25 px-2.5 py-2 rounded-xl border border-purple-500/30 flex items-center justify-center gap-1.5 text-xs btn-touch transition-all"
+                    title="Click to copy referral code"
+                  >
+                    <span className="truncate">{user?.referralCode || 'CODE'}</span>
+                    <Copy className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/referral')}
+                    className="w-full px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs rounded-xl shadow-md btn-touch flex items-center justify-center gap-1"
+                  >
+                    <span>Referral Hub</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
+            );
+          })()}
 
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button
-                  onClick={() => {
-                    const num = (sysConfig?.supportWhatsapp || '+919876543210').replace(/[^\d+]/g, '');
-                    window.open(`https://wa.me/${num.replace('+', '')}`, '_blank');
-                  }}
-                  className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/30 btn-touch flex items-center gap-1"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                </button>
-                <button
-                  onClick={() => setShowSupportModal(true)}
-                  className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl shadow-md btn-touch shrink-0 flex items-center gap-1"
-                >
-                  Support <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+          {/* Help & Support Desk Banner Card */}
+          <div className="bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-900 p-3.5 sm:p-4 rounded-2xl border border-emerald-500/30 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
+                <Headphones className="w-5 h-5" />
               </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                  <h4 className="text-xs sm:text-sm font-black text-white">24/7 Customer Support</h4>
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-black border border-emerald-500/30 shrink-0">
+                    Live 24/7
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Need help with deposits or withdrawals? Connect instantly.
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons in 2-Column Grid */}
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-emerald-500/20">
+              <button
+                onClick={() => {
+                  const num = (sysConfig?.supportWhatsapp || '+919876543210').replace(/[^\d+]/g, '');
+                  window.open(`https://wa.me/${num.replace('+', '')}`, '_blank');
+                }}
+                className="w-full px-2.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-500/30 btn-touch flex items-center justify-center gap-1.5 transition-all"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp
+              </button>
+
+              <button
+                onClick={() => setShowSupportModal(true)}
+                className="w-full px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs rounded-xl shadow-md btn-touch flex items-center justify-center gap-1"
+              >
+                <span>Support Desk</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 

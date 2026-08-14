@@ -22,12 +22,13 @@ export default function ConfirmModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onCancel}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
           className="glass-card w-full max-w-xs p-4 space-y-4 relative shadow-2xl"
+          onClick={e => e.stopPropagation()}
         >
           <button
             onClick={onCancel}

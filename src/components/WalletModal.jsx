@@ -216,49 +216,52 @@ export default function WalletModal({ onClose, initialTab = 'recharge' }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="glass-card max-w-lg w-full mx-auto space-y-4 relative max-h-[85vh] overflow-y-auto p-4 sm:p-6 my-auto shadow-2xl rounded-2xl border border-slate-700/60"
+        className="glass-card max-w-md w-full max-h-[85vh] flex flex-col mx-auto relative overflow-hidden"
+        onClick={e => e.stopPropagation()}
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition-colors btn-touch"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Modal Title */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
-            <Wallet className="w-4 h-4" />
+        {/* Fixed Header */}
+        <div className="flex justify-between items-center pb-3 border-b border-slate-800 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
+              <Wallet className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">Wallet Management</h2>
+              <p className="text-[10px] text-slate-400">Instant deposits & cash withdrawals</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-extrabold text-white">Wallet Management</h2>
-            <p className="text-[10px] text-slate-400">Instant deposits & cash withdrawals</p>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-1 text-slate-400 hover:text-white rounded-lg btn-touch"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Current Balance Summary Banner */}
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          className="bg-gradient-to-r from-slate-900 to-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center shadow-md"
-        >
-          <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Available Balance</span>
-            <span className="text-2xl font-black text-amber-400 font-mono">₹{user?.balance?.toFixed(2) || '0.00'}</span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-inner">
-            <Wallet className="w-5 h-5" />
-          </div>
-        </motion.div>
+        {/* Scrollable Body */}
+        <div className="overflow-y-auto custom-scrollbar flex-1 space-y-4 pt-3 pr-0.5">
+          {/* Current Balance Summary Banner */}
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            className="bg-gradient-to-r from-slate-900 to-slate-950 p-3.5 sm:p-4 rounded-2xl border border-slate-800 flex justify-between items-center shadow-md"
+          >
+            <div>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Available Balance</span>
+              <span className="text-xl sm:text-2xl font-black text-amber-400 font-mono">₹{user?.balance?.toFixed(2) || '0.00'}</span>
+            </div>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-inner">
+              <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+          </motion.div>
 
-        {/* Tab Switcher: Recharge vs Withdraw */}
-        <div className="flex bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs font-bold gap-1">
+          {/* Tab Switcher: Recharge vs Withdraw */}
+          <div className="flex bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs font-bold gap-1">
           <button
             onClick={() => setActiveTab('recharge')}
             className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-1.5 btn-touch ${
@@ -540,6 +543,7 @@ export default function WalletModal({ onClose, initialTab = 'recharge' }) {
             </motion.form>
           )}
         </AnimatePresence>
+        </div>
       </motion.div>
     </div>
   );
