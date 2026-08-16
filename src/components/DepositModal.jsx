@@ -240,6 +240,26 @@ export default function DepositModal({ isOpen, onClose }) {
         {/* GATEWAY 2: DIRECT ADMIN UPI INTENT */}
         {activeMethod === 'AUTOMATED_UPI_GATEWAY' && (
           <div className="pt-2 border-t border-slate-800 space-y-3">
+            {/* Copy UPI VPA row */}
+            <div className="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+              <div className="min-w-0 pr-2">
+                <span className="text-[10px] text-slate-400 block font-bold">Admin UPI ID</span>
+                <span className="text-xs font-mono font-black text-purple-300 truncate block">
+                  {sysConfig?.upiId || '9136799526-2@ybl'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(sysConfig?.upiId || '9136799526-2@ybl');
+                  toast.success('UPI ID copied!');
+                }}
+                className="px-2.5 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 rounded-lg text-xs font-bold shrink-0 btn-touch"
+              >
+                Copy
+              </button>
+            </div>
+
             {/* 1-Tap Mobile Launch UPI App Button */}
             <button
               type="button"
@@ -260,8 +280,20 @@ export default function DepositModal({ isOpen, onClose }) {
               )}
             </button>
 
+            {/* Dynamic QR Code for Scan / PhonePe / Paytm */}
+            <div className="text-center space-y-1">
+              <div className="w-28 h-28 mx-auto bg-white p-1 rounded-xl shadow-md border border-slate-700">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${sysConfig?.upiId || '9136799526-2@ybl'}&pn=RRR&am=${rechargeAmount}&cu=INR&tn=Recharge`)}`}
+                  alt="Instant Payment QR"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="text-[10px] text-slate-400 font-bold block">Scan QR code in PhonePe / GPay / Paytm</span>
+            </div>
+
             {/* Simple UTR Entry Form */}
-            <form onSubmit={handleManualRechargeSubmit} className="space-y-2">
+            <form onSubmit={handleManualRechargeSubmit} className="space-y-2 pt-1 border-t border-slate-800/80">
               <input
                 type="text"
                 value={utrNumber}
