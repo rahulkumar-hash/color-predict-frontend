@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowDownRight, Copy, QrCode, X, Zap, Smartphone, CreditCard, ShieldCheck, RefreshCw } from 'lucide-react';
+import { ArrowDownRight, X, Zap, Smartphone, CreditCard, ShieldCheck, RefreshCw, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWalletStore } from '../store/useWalletStore';
@@ -25,24 +25,25 @@ export default function DepositModal({ isOpen, onClose }) {
   const { user, sysConfig, fetchSysConfig } = useAuthStore();
   const { submitRecharge, createPaymentOrder, verifyRazorpayPayment, recharging } = useWalletStore();
 
-  const [rechargeAmount, setRechargeAmount] = useState(100);
+  const [rechargeAmount, setRechargeAmount] = useState(500);
   const [utrNumber, setUtrNumber] = useState('');
   const [creatingOrder, setCreatingOrder] = useState(false);
 
-  // Fetch fresh system payment config whenever modal opens
   useEffect(() => {
     if (isOpen) {
       fetchSysConfig();
+      setCreatingOrder(false);
     }
   }, [isOpen]);
 
-  // Single Active Payment Gateway configured by Admin ('AUTOMATED_RAZORPAY' | 'AUTOMATED_UPI_GATEWAY' | 'MANUAL_UPI')
-  const activeMethod = sysConfig?.activePaymentMethod || 'MANUAL_UPI';
+  // Reset loading spinner whenever user switches back from UPI app to website
+  useEffect(() => {
+    const handleFocus = () => setCreatingOrder(false);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
-  const handleCopyUPI = () => {
-    navigator.clipboard.writeText(sysConfig.upiId || 'merchant@upi');
-    toast.success('UPI ID copied to clipboard!');
-  };
+  const activeMethod = sysConfig?.activePaymentMethod || 'MANUAL_UPI';
 
   const handleManualRechargeSubmit = async (e) => {
     e.preventDefault();
@@ -51,15 +52,15 @@ export default function DepositModal({ isOpen, onClose }) {
       return;
     }
 
-    const toastId = toast.loading('Submitting deposit request for Admin verification...');
+    const toastId = toast.loading('Submitting UTR verification...');
     const res = await submitRecharge(Number(rechargeAmount), utrNumber.trim());
 
     if (res.success) {
-      toast.success(res.message, { id: toastId, duration: 5000 });
+      toast.success(res.message || 'UTR submitted successfully!', { id: toastId, duration: 4000 });
       setUtrNumber('');
       onClose();
     } else {
-      toast.error(res.error, { id: toastId });
+      toast.error(res.error || 'Failed to submit UTR', { id: toastId });
     }
   };
 
@@ -70,7 +71,7 @@ export default function DepositModal({ isOpen, onClose }) {
     }
 
     setCreatingOrder(true);
-    const toastId = toast.loading('Initializing Razorpay Checkout Gateway...');
+    const toastId = toast.loading('Opening Razorpay...');
 
     const res = await createPaymentOrder(Number(rechargeAmount), 'AUTOMATED_RAZORPAY');
     setCreatingOrder(false);
@@ -82,7 +83,7 @@ export default function DepositModal({ isOpen, onClose }) {
 
     const resLoaded = await loadRazorpayScript();
     if (!resLoaded) {
-      toast.error('Razorpay SDK failed to load. Please check internet connection.', { id: toastId });
+      toast.error('Razorpay SDK failed to load.', { id: toastId });
       return;
     }
 
@@ -97,18 +98,16 @@ export default function DepositModal({ isOpen, onClose }) {
       amount: amountInPaisa,
       currency: orderData.currency || 'INR',
       name: sysConfig.appName || 'Color Predict Pro',
-      description: `Wallet Deposit ₹${rechargeAmount}`,
+      description: `Deposit ₹${rechargeAmount}`,
       image: sysConfig.appLogoUrl || '',
       prefill: {
         name: user?.fullName || user?.username,
         email: user?.email || 'user@example.com',
         contact: user?.phone || '9999999999'
       },
-      theme: {
-        color: '#10B981'
-      },
+      theme: { color: '#10B981' },
       handler: async function (response) {
-        const verifyToast = toast.loading('Verifying payment signature & auto-crediting balance...');
+        const verifyToast = toast.loading('Verifying payment...');
         const verifyRes = await verifyRazorpayPayment({
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_order_id: response.razorpay_order_id,
@@ -117,15 +116,15 @@ export default function DepositModal({ isOpen, onClose }) {
         });
 
         if (verifyRes.success) {
-          toast.success(verifyRes.message || 'Payment verified! Wallet credited instantly.', { id: verifyToast, duration: 5000 });
+          toast.success(verifyRes.message || 'Payment verified! Wallet credited.', { id: verifyToast, duration: 4000 });
           onClose();
         } else {
-          toast.error(verifyRes.error || 'Payment verification failed', { id: verifyToast });
+          toast.error(verifyRes.error || 'Verification failed', { id: verifyToast });
         }
       },
       modal: {
         ondismiss: function () {
-          toast('Razorpay checkout window closed.', { icon: 'ℹ️' });
+          setCreatingOrder(false);
         }
       }
     };
@@ -136,13 +135,9 @@ export default function DepositModal({ isOpen, onClose }) {
 
     try {
       const paymentObject = new window.Razorpay(options);
-      paymentObject.on('payment.failed', function (resp) {
-        toast.error(`Payment failed: ${resp.error?.description || 'Transaction declined'}`);
-      });
       paymentObject.open();
     } catch (err) {
-      console.error('Razorpay Modal Error:', err);
-      toast.error('Could not launch Razorpay checkout modal.');
+      toast.error('Could not launch Razorpay.');
     }
   };
 
@@ -158,225 +153,159 @@ export default function DepositModal({ isOpen, onClose }) {
       const orderData = res.data?.order || res.data;
 
       if (res.success && (orderData?.paymentUrl || orderData?.intentUrl)) {
-        // Direct seamless redirection without annoying toast popups
         window.location.href = orderData.paymentUrl || orderData.intentUrl;
+        // Auto reset spinner after 1.2s so when user returns from PhonePe/GPay app, button is NOT stuck!
+        setTimeout(() => {
+          setCreatingOrder(false);
+        }, 1200);
       } else {
         setCreatingOrder(false);
-        toast.error(res.error || 'Failed to generate UPI payment link');
+        toast.error(res.error || 'Failed to open UPI App');
       }
     } catch (err) {
       setCreatingOrder(false);
-      toast.error('Payment gateway error. Please try again.');
+      toast.error('Could not open UPI payment app.');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3" onClick={onClose}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="glass-card max-w-md w-full mx-auto max-h-[85vh] flex flex-col relative overflow-hidden"
+        exit={{ opacity: 0, scale: 0.96 }}
+        className="glass-card max-w-sm w-full mx-auto p-4 space-y-4 relative overflow-hidden shadow-2xl border border-slate-800"
         onClick={e => e.stopPropagation()}
       >
-        {/* Fixed Modal Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-slate-800 shrink-0">
+        {/* Header */}
+        <div className="flex justify-between items-center pb-2.5 border-b border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-              <ArrowDownRight className="w-5 h-5" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+              <ArrowDownRight className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">Wallet Deposit & Recharge</h3>
-              <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Real-time Gateway Sync Active
-              </span>
-            </div>
+            <h3 className="text-xs font-black text-white uppercase tracking-wider">Deposit Wallet</h3>
           </div>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg btn-touch">
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Scrollable Modal Body */}
-        <div className="overflow-y-auto custom-scrollbar flex-1 space-y-4 pt-3 pr-0.5">
-          {/* Deposit Preset Amount Selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-extrabold text-slate-300">Select Deposit Amount (₹)</label>
-            <div className="grid grid-cols-4 gap-2">
-              {[100, 500, 1000, 2000].map(amt => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => setRechargeAmount(amt)}
-                  className={`py-2 rounded-xl text-xs font-mono font-black border transition-all btn-touch ${
-                    rechargeAmount === amt
-                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20'
-                      : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  ₹{amt}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400">Or Enter Custom Amount (₹)</label>
-            <input
-              type="number"
-              min="10"
-              value={rechargeAmount}
-              onChange={e => setRechargeAmount(Number(e.target.value))}
-              className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          {/* SINGLE ACTIVE GATEWAY 1: AUTOMATED RAZORPAY */}
-          {activeMethod === 'AUTOMATED_RAZORPAY' && (
-            <div className="space-y-4 pt-3 border-t border-slate-800">
-              <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-2 text-center">
-                <CreditCard className="w-8 h-8 mx-auto text-emerald-400" />
-                <span className="text-xs font-black text-white uppercase tracking-wider block">Razorpay Auto-Deposit Checkout</span>
-                <p className="text-[11px] text-slate-400">Instant credit via UPI, Cards, NetBanking, or Wallets using official Razorpay modal.</p>
-              </div>
-
+        {/* Deposit Preset Amount Selector */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold text-slate-400">Select Amount (₹)</label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[100, 500, 1000, 2000].map(amt => (
               <button
+                key={amt}
                 type="button"
-                onClick={handleAutomatedRazorpayPay}
-                disabled={creatingOrder}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
+                onClick={() => setRechargeAmount(amt)}
+                className={`py-2 rounded-xl text-xs font-mono font-black border transition-all btn-touch ${
+                  rechargeAmount === amt
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm'
+                    : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                }`}
               >
-                <ShieldCheck className="w-4 h-4" /> {creatingOrder ? 'Opening Razorpay...' : `Pay ₹${rechargeAmount} with Razorpay`}
+                ₹{amt}
               </button>
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
 
-          {/* SINGLE ACTIVE GATEWAY 2: AUTOMATED DIRECT ADMIN UPI GATEWAY */}
-          {activeMethod === 'AUTOMATED_UPI_GATEWAY' && (
-            <div className="space-y-4 pt-3 border-t border-slate-800">
-              <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3 text-center">
-                <Smartphone className="w-8 h-8 mx-auto text-purple-400" />
-                <span className="text-xs font-black text-white uppercase tracking-wider block">Direct Admin UPI Payment</span>
-                <p className="text-[11px] text-slate-400">Pay directly to Admin UPI VPA via PhonePe, Paytm, GPay, or BHIM.</p>
-                
-                {/* Admin UPI VPA ID Display with Copy */}
-                <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-extrabold uppercase block text-left">Admin UPI VPA</span>
-                    <span className="text-xs font-mono font-black text-purple-300">{sysConfig?.upiId || '9820035336@ybl'}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyUPI}
-                    className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 rounded-lg text-[11px] font-bold flex items-center gap-1 btn-touch"
-                  >
-                    <Copy className="w-3.5 h-3.5" /> Copy
-                  </button>
-                </div>
-              </div>
+        {/* Custom Amount Input */}
+        <div className="space-y-1">
+          <input
+            type="number"
+            min="10"
+            value={rechargeAmount}
+            onChange={e => setRechargeAmount(Number(e.target.value))}
+            className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+            placeholder="Enter amount (₹)"
+          />
+        </div>
 
-              {/* 1-Tap Mobile Launch UPI App Button */}
-              <button
-                type="button"
-                onClick={handleAutomatedUpiPay}
-                disabled={creatingOrder}
-                className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-purple-600/20 btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {creatingOrder ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-purple-200" />
-                    <span>Opening UPI Payment Apps...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 text-amber-300" />
-                    <span>Pay ₹{rechargeAmount} via UPI App (PhonePe / GPay / Paytm)</span>
-                  </>
-                )}
-              </button>
+        {/* GATEWAY 1: AUTOMATED RAZORPAY */}
+        {activeMethod === 'AUTOMATED_RAZORPAY' && (
+          <div className="pt-2 border-t border-slate-800 space-y-2">
+            <button
+              type="button"
+              onClick={handleAutomatedRazorpayPay}
+              disabled={creatingOrder}
+              className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <ShieldCheck className="w-4 h-4" /> {creatingOrder ? 'Opening Razorpay...' : `Pay ₹${rechargeAmount} with Razorpay`}
+            </button>
+          </div>
+        )}
 
-              {/* UTR Verification Section */}
-              <form onSubmit={handleManualRechargeSubmit} className="space-y-3 pt-2 border-t border-slate-800/80">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-300 flex justify-between">
-                    <span>12-Digit UTR / Reference No.</span>
-                    <span className="text-[10px] text-purple-400 font-mono">From UPI App</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={utrNumber}
-                    onChange={e => setUtrNumber(e.target.value)}
-                    placeholder="Enter 12-digit UPI UTR / Ref No."
-                    className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
-                    required
-                  />
-                </div>
+        {/* GATEWAY 2: DIRECT ADMIN UPI INTENT */}
+        {activeMethod === 'AUTOMATED_UPI_GATEWAY' && (
+          <div className="pt-2 border-t border-slate-800 space-y-3">
+            {/* 1-Tap Mobile Launch UPI App Button */}
+            <button
+              type="button"
+              onClick={handleAutomatedUpiPay}
+              disabled={creatingOrder}
+              className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {creatingOrder ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-purple-200" />
+                  <span>Opening UPI App...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 text-amber-300" />
+                  <span>Pay ₹{rechargeAmount} via UPI App</span>
+                </>
+              )}
+            </button>
 
-                <button
-                  type="submit"
-                  disabled={recharging}
-                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <ShieldCheck className="w-4 h-4" /> {recharging ? 'Submitting...' : 'Submit Payment for Admin Verification'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* SINGLE ACTIVE GATEWAY 3: MANUAL UPI (QR + UTR) */}
-          {activeMethod === 'MANUAL_UPI' && (
-            <form onSubmit={handleManualRechargeSubmit} className="space-y-4 pt-3 border-t border-slate-800">
-              <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 space-y-3 text-center">
-                <span className="text-xs font-black text-amber-400 uppercase tracking-wider block">Manual UPI Payment Portal</span>
-
-                {sysConfig?.qrCodeUrl ? (
-                  <div className="w-36 h-36 mx-auto bg-white p-2 rounded-2xl shadow-lg border-2 border-amber-500/30">
-                    <img src={sysConfig.qrCodeUrl} alt="UPI QR Code" className="w-full h-full object-contain" />
-                  </div>
-                ) : (
-                  <div className="w-36 h-36 mx-auto bg-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-400">
-                    <QrCode className="w-10 h-10 mb-1 text-amber-400" />
-                    <span className="text-[10px] font-bold">QR Code Preview</span>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
-                  <div className="text-left">
-                    <span className="text-[10px] text-slate-500 font-bold block">Official UPI VPA ID</span>
-                    <span className="text-xs font-mono font-bold text-white">{sysConfig?.upiId || 'merchant@upi'}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyUPI}
-                    className="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded-lg text-xs font-bold hover:bg-amber-500/30 btn-touch flex items-center gap-1"
-                  >
-                    <Copy className="w-3.5 h-3.5" /> Copy
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-extrabold text-slate-200">Payment 12-Digit UTR / Ref Number</label>
-                <input
-                  type="text"
-                  placeholder="Enter 12-digit UTR from GPay/PhonePe"
-                  value={utrNumber}
-                  onChange={e => setUtrNumber(e.target.value)}
-                  required
-                  className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
+            {/* Simple UTR Entry Form */}
+            <form onSubmit={handleManualRechargeSubmit} className="space-y-2">
+              <input
+                type="text"
+                value={utrNumber}
+                onChange={e => setUtrNumber(e.target.value)}
+                placeholder="Enter 12-digit UTR / Ref No."
+                className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
+                required
+              />
               <button
                 type="submit"
                 disabled={recharging}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 btn-touch disabled:opacity-50"
+                className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {recharging ? 'Submitting UTR...' : 'Submit Deposit Order'}
+                <ShieldCheck className="w-4 h-4" /> {recharging ? 'Submitting...' : 'Submit UTR'}
               </button>
             </form>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* GATEWAY 3: MANUAL UPI (QR CODE) */}
+        {activeMethod === 'MANUAL_UPI' && (
+          <form onSubmit={handleManualRechargeSubmit} className="pt-2 border-t border-slate-800 space-y-3">
+            {sysConfig?.qrCodeUrl && (
+              <div className="w-32 h-32 mx-auto bg-white p-1.5 rounded-xl shadow-md border border-slate-700">
+                <img src={sysConfig.qrCodeUrl} alt="UPI QR" className="w-full h-full object-contain" />
+              </div>
+            )}
+            <input
+              type="text"
+              value={utrNumber}
+              onChange={e => setUtrNumber(e.target.value)}
+              placeholder="Enter 12-digit UTR / Ref No."
+              className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500"
+              required
+            />
+            <button
+              type="submit"
+              disabled={recharging}
+              className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <ShieldCheck className="w-4 h-4" /> {recharging ? 'Submitting...' : 'Submit UTR'}
+            </button>
+          </form>
+        )}
       </motion.div>
     </div>
   );
