@@ -132,8 +132,11 @@ export default function App() {
           </Routes>
         ) : (
           <Routes>
+            <Route path="/login" element={<AuthPage initialMode="login" />} />
+            <Route path="/signup" element={<AuthPage initialMode="signup" />} />
+            <Route path="/register" element={<AuthPage initialMode="signup" />} />
             <Route path="/auth" element={<AuthPage />} />
-            <Route path="*" element={<Navigate to="/auth" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         )}
       </AnimatePresence>

@@ -251,33 +251,75 @@ export default function DepositModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* SINGLE ACTIVE GATEWAY 2: AUTOMATED UPI GATEWAY */}
+          {/* SINGLE ACTIVE GATEWAY 2: AUTOMATED DIRECT ADMIN UPI GATEWAY */}
           {activeMethod === 'AUTOMATED_UPI_GATEWAY' && (
             <div className="space-y-4 pt-3 border-t border-slate-800">
-              <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-2 text-center">
+              <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3 text-center">
                 <Smartphone className="w-8 h-8 mx-auto text-purple-400" />
-                <span className="text-xs font-black text-white uppercase tracking-wider block">Automated Instant UPI Gateway</span>
-                <p className="text-[11px] text-slate-400">1-Tap instant redirection to GPay, PhonePe, Paytm, or BHIM UPI apps.</p>
+                <span className="text-xs font-black text-white uppercase tracking-wider block">Direct Admin UPI Payment</span>
+                <p className="text-[11px] text-slate-400">Pay directly to Admin UPI VPA via PhonePe, Paytm, GPay, or BHIM.</p>
+                
+                {/* Admin UPI VPA ID Display with Copy */}
+                <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-500 font-extrabold uppercase block text-left">Admin UPI VPA</span>
+                    <span className="text-xs font-mono font-black text-purple-300">{sysConfig?.upiId || '9820035336@ybl'}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyUPI}
+                    className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 rounded-lg text-[11px] font-bold flex items-center gap-1 btn-touch"
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy
+                  </button>
+                </div>
               </div>
 
+              {/* 1-Tap Mobile Launch UPI App Button */}
               <button
                 type="button"
                 onClick={handleAutomatedUpiPay}
                 disabled={creatingOrder}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-purple-600/20 btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-purple-600/20 btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {creatingOrder ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin text-purple-200" />
-                    <span>Connecting to Payment Gateway...</span>
+                    <span>Opening UPI Payment Apps...</span>
                   </>
                 ) : (
                   <>
-                    <Zap className="w-4 h-4" />
-                    <span>Pay ₹${rechargeAmount} via Instant UPI App</span>
+                    <Zap className="w-4 h-4 text-amber-300" />
+                    <span>Pay ₹{rechargeAmount} via UPI App (PhonePe / GPay / Paytm)</span>
                   </>
                 )}
               </button>
+
+              {/* UTR Verification Section */}
+              <form onSubmit={handleManualRechargeSubmit} className="space-y-3 pt-2 border-t border-slate-800/80">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-300 flex justify-between">
+                    <span>12-Digit UTR / Reference No.</span>
+                    <span className="text-[10px] text-purple-400 font-mono">From UPI App</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={utrNumber}
+                    onChange={e => setUtrNumber(e.target.value)}
+                    placeholder="Enter 12-digit UPI UTR / Ref No."
+                    className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={recharging}
+                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <ShieldCheck className="w-4 h-4" /> {recharging ? 'Submitting...' : 'Submit Payment for Admin Verification'}
+                </button>
+              </form>
             </div>
           )}
 

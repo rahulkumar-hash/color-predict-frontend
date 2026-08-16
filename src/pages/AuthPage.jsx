@@ -3,18 +3,19 @@ import { motion } from 'framer-motion';
 import { Lock, Mail, Phone, User, KeyRound, ArrowRight, ShieldCheck, AlertCircle, Zap, Award, Sparkles, CheckCircle2, Gift, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 
-export default function AuthPage() {
+export default function AuthPage({ initialMode }) {
   const { sendOtp, register, verifyOtpLogin, loginWithPassword, forgotPassword, isBackendOnline } = useAuthStore();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [mode, setMode] = useState('login'); // 'login' or 'signup'
+  const [mode, setMode] = useState(initialMode || (location.pathname === '/signup' ? 'signup' : 'login')); // 'login' or 'signup'
   const [loginType, setLoginType] = useState('password'); // 'password' or 'otp'
   
   // Form states
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -35,12 +36,29 @@ export default function AuthPage() {
   const [referralCode, setReferralCode] = useState('');
 
   useEffect(() => {
+    if (location.pathname === '/signup' || location.pathname === '/register' || initialMode === 'signup') {
+      setMode('signup');
+    } else if (location.pathname === '/login' || initialMode === 'login') {
+      setMode('login');
+    }
+  }, [location.pathname, initialMode]);
+
+  useEffect(() => {
     const refCode = searchParams.get('ref');
     if (refCode) {
       setReferralCode(refCode.toUpperCase());
       setMode('signup');
     }
-  }, []);
+  }, [searchParams]);
+
+  const switchMode = (newMode) => {
+    setMode(newMode);
+    if (newMode === 'signup') {
+      navigate('/signup', { replace: true });
+    } else {
+      navigate('/login', { replace: true });
+    }
+  };
 
   // Handle Send OTP
   const handleSendOtp = async (targetId, purpose) => {
@@ -224,7 +242,7 @@ export default function AuthPage() {
             {/* Tab Switcher: Login vs Signup */}
             <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
               <button
-                onClick={() => setMode('login')}
+                onClick={() => switchMode('login')}
                 className={`flex-1 py-3 rounded-xl font-black text-xs transition-all btn-touch ${
                   mode === 'login' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-200'
                 }`}
@@ -232,7 +250,7 @@ export default function AuthPage() {
                 Sign In
               </button>
               <button
-                onClick={() => setMode('signup')}
+                onClick={() => switchMode('signup')}
                 className={`flex-1 py-3 rounded-xl font-black text-xs transition-all btn-touch ${
                   mode === 'signup' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-200'
                 }`}
@@ -359,16 +377,16 @@ export default function AuthPage() {
               </div>
             )}
 
-            {/* SIGNUP FORM */}
+            {/* SIGNUP FORM - 3 FIELDS ONLY (Email, Phone, Password) */}
             {mode === 'signup' && (
               <form onSubmit={handleSignup} className="space-y-3.5">
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    placeholder="Choose Username"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="Phone Number"
                     className="w-full bg-dark-950/80 border border-slate-700/80 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white focus:outline-none focus:border-emerald-500"
                     required
                   />
@@ -381,18 +399,6 @@ export default function AuthPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="Email Address"
-                    className="w-full bg-dark-950/80 border border-slate-700/80 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white focus:outline-none focus:border-emerald-500"
-                    required
-                  />
-                </div>
-
-                <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    placeholder="Phone Number"
                     className="w-full bg-dark-950/80 border border-slate-700/80 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white focus:outline-none focus:border-emerald-500"
                     required
                   />
