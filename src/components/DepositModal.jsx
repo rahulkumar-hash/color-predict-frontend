@@ -141,6 +141,21 @@ export default function DepositModal({ isOpen, onClose }) {
     }
   };
 
+  const handlePhonePePay = () => {
+    const upiId = sysConfig?.upiId || '9136799526-2@ybl';
+    navigator.clipboard.writeText(upiId);
+    toast.success(`UPI ID (${upiId}) copied! Paste & Pay in PhonePe`, { duration: 5000 });
+    setTimeout(() => {
+      window.location.href = 'phonepe://';
+    }, 400);
+  };
+
+  const handleGPay = () => {
+    const upiId = sysConfig?.upiId || '9136799526-2@ybl';
+    const appName = encodeURIComponent(sysConfig?.appName || 'RRR');
+    window.location.href = `tez://upi/pay?pa=${upiId}&pn=${appName}&am=${rechargeAmount}&cu=INR&tn=Recharge`;
+  };
+
   const handleAutomatedUpiPay = async () => {
     if (!rechargeAmount || rechargeAmount < 10) {
       toast.error('Minimum deposit amount is ₹10');
@@ -237,60 +252,19 @@ export default function DepositModal({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* GATEWAY 2: DIRECT ADMIN UPI INTENT */}
+        {/* GATEWAY 2: DIRECT GOOGLE PAY INTENT */}
         {activeMethod === 'AUTOMATED_UPI_GATEWAY' && (
           <div className="pt-2 border-t border-slate-800 space-y-3">
-            {/* Copy UPI VPA row */}
-            <div className="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
-              <div className="min-w-0 pr-2">
-                <span className="text-[10px] text-slate-400 block font-bold">Admin UPI ID</span>
-                <span className="text-xs font-mono font-black text-purple-300 truncate block">
-                  {sysConfig?.upiId || '9136799526-2@ybl'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(sysConfig?.upiId || '9136799526-2@ybl');
-                  toast.success('UPI ID copied!');
-                }}
-                className="px-2.5 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 rounded-lg text-xs font-bold shrink-0 btn-touch"
-              >
-                Copy
-              </button>
-            </div>
-
-            {/* 1-Tap Mobile Launch UPI App Button */}
+            {/* Direct Google Pay Launch Button */}
             <button
               type="button"
-              onClick={handleAutomatedUpiPay}
+              onClick={handleGPay}
               disabled={creatingOrder}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {creatingOrder ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-purple-200" />
-                  <span>Opening UPI App...</span>
-                </>
-              ) : (
-                <>
-                  <Zap className="w-4 h-4 text-amber-300" />
-                  <span>Pay ₹{rechargeAmount} via UPI App</span>
-                </>
-              )}
+              <Zap className="w-4 h-4 text-amber-300" />
+              <span>Pay ₹{rechargeAmount} via Google Pay</span>
             </button>
-
-            {/* Dynamic QR Code for Scan / PhonePe / Paytm */}
-            <div className="text-center space-y-1">
-              <div className="w-28 h-28 mx-auto bg-white p-1 rounded-xl shadow-md border border-slate-700">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${sysConfig?.upiId || '9136799526-2@ybl'}&pn=RRR&am=${rechargeAmount}&cu=INR&tn=Recharge`)}`}
-                  alt="Instant Payment QR"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <span className="text-[10px] text-slate-400 font-bold block">Scan QR code in PhonePe / GPay / Paytm</span>
-            </div>
 
             {/* Simple UTR Entry Form */}
             <form onSubmit={handleManualRechargeSubmit} className="space-y-2 pt-1 border-t border-slate-800/80">
@@ -299,7 +273,7 @@ export default function DepositModal({ isOpen, onClose }) {
                 value={utrNumber}
                 onChange={e => setUtrNumber(e.target.value)}
                 placeholder="Enter 12-digit UTR / Ref No."
-                className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
+                className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
                 required
               />
               <button
