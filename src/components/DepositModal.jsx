@@ -45,15 +45,23 @@ export default function DepositModal({ isOpen, onClose }) {
 
   const activeMethod = sysConfig?.activePaymentMethod || 'MANUAL_UPI';
 
+  const minDeposit = sysConfig?.minDepositAmount || 100;
+
   const handleManualRechargeSubmit = async (e) => {
     e.preventDefault();
-    if (!utrNumber || utrNumber.trim().length < 6) {
+    const numAmt = Number(rechargeAmount);
+    if (!numAmt || numAmt < minDeposit) {
+      toast.error(`Minimum deposit amount is ₹${minDeposit}`);
+      return;
+    }
+
+    if (!utrNumber || utrNumber.trim().length < 8) {
       toast.error('Please enter a valid 12-digit UTR/Reference Number');
       return;
     }
 
     const toastId = toast.loading('Submitting UTR verification...');
-    const res = await submitRecharge(Number(rechargeAmount), utrNumber.trim());
+    const res = await submitRecharge(numAmt, utrNumber.trim());
 
     if (res.success) {
       toast.success(res.message || 'UTR submitted successfully!', { id: toastId, duration: 4000 });
@@ -65,15 +73,16 @@ export default function DepositModal({ isOpen, onClose }) {
   };
 
   const handleAutomatedRazorpayPay = async () => {
-    if (!rechargeAmount || rechargeAmount < 10) {
-      toast.error('Minimum deposit amount is ₹10');
+    const numAmt = Number(rechargeAmount);
+    if (!numAmt || numAmt < minDeposit) {
+      toast.error(`Minimum deposit amount is ₹${minDeposit}`);
       return;
     }
 
     setCreatingOrder(true);
     const toastId = toast.loading('Opening Razorpay...');
 
-    const res = await createPaymentOrder(Number(rechargeAmount), 'AUTOMATED_RAZORPAY');
+    const res = await createPaymentOrder(numAmt, 'AUTOMATED_RAZORPAY');
     setCreatingOrder(false);
 
     if (!res.success || !res.data) {
@@ -91,14 +100,14 @@ export default function DepositModal({ isOpen, onClose }) {
 
     const orderData = res.data?.order || res.data;
     const razorpayKey = orderData.keyId || orderData.razorpayKey || sysConfig?.razorpayConfig?.keyId || 'rzp_test_demo123';
-    const amountInPaisa = orderData.amountInPaisa || (Number(rechargeAmount) * 100);
+    const amountInPaisa = orderData.amountInPaisa || (numAmt * 100);
 
     const options = {
       key: razorpayKey,
       amount: amountInPaisa,
       currency: orderData.currency || 'INR',
       name: sysConfig.appName || 'Color Predict Pro',
-      description: `Deposit ₹${rechargeAmount}`,
+      description: `Deposit ₹${numAmt}`,
       image: sysConfig.appLogoUrl || '',
       prefill: {
         name: user?.fullName || user?.username,
@@ -141,46 +150,15 @@ export default function DepositModal({ isOpen, onClose }) {
     }
   };
 
-  const handlePhonePePay = () => {
-    const upiId = sysConfig?.upiId || '9136799526-2@ybl';
-    navigator.clipboard.writeText(upiId);
-    toast.success(`UPI ID (${upiId}) copied! Paste & Pay in PhonePe`, { duration: 5000 });
-    setTimeout(() => {
-      window.location.href = 'phonepe://';
-    }, 400);
-  };
-
   const handleGPay = () => {
-    const upiId = sysConfig?.upiId || '9136799526-2@ybl';
-    const appName = encodeURIComponent(sysConfig?.appName || 'RRR');
-    window.location.href = `tez://upi/pay?pa=${upiId}&pn=${appName}&am=${rechargeAmount}&cu=INR&tn=Recharge`;
-  };
-
-  const handleAutomatedUpiPay = async () => {
-    if (!rechargeAmount || rechargeAmount < 10) {
-      toast.error('Minimum deposit amount is ₹10');
+    const numAmt = Number(rechargeAmount);
+    if (!numAmt || numAmt < minDeposit) {
+      toast.error(`Minimum deposit amount is ₹${minDeposit}`);
       return;
     }
-
-    setCreatingOrder(true);
-    try {
-      const res = await createPaymentOrder(Number(rechargeAmount), 'AUTOMATED_UPI_GATEWAY');
-      const orderData = res.data?.order || res.data;
-
-      if (res.success && (orderData?.paymentUrl || orderData?.intentUrl)) {
-        window.location.href = orderData.paymentUrl || orderData.intentUrl;
-        // Auto reset spinner after 1.2s so when user returns from PhonePe/GPay app, button is NOT stuck!
-        setTimeout(() => {
-          setCreatingOrder(false);
-        }, 1200);
-      } else {
-        setCreatingOrder(false);
-        toast.error(res.error || 'Failed to open UPI App');
-      }
-    } catch (err) {
-      setCreatingOrder(false);
-      toast.error('Could not open UPI payment app.');
-    }
+    const upiId = sysConfig?.upiId || '9136799526-2@ybl';
+    const appName = encodeURIComponent(sysConfig?.appName || 'RRR');
+    window.location.href = `tez://upi/pay?pa=${upiId}&pn=${appName}&am=${numAmt}&cu=INR&tn=Recharge`;
   };
 
   return (
@@ -207,7 +185,10 @@ export default function DepositModal({ isOpen, onClose }) {
 
         {/* Deposit Preset Amount Selector */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-slate-400">Select Amount (₹)</label>
+          <label className="text-[11px] font-bold text-slate-400 flex justify-between">
+            <span>Select Amount (₹)</span>
+            <span className="text-amber-400 font-extrabold text-[10px]">Min: ₹{minDeposit}</span>
+          </label>
           <div className="grid grid-cols-4 gap-1.5">
             {[100, 500, 1000, 2000].map(amt => (
               <button
@@ -215,7 +196,7 @@ export default function DepositModal({ isOpen, onClose }) {
                 type="button"
                 onClick={() => setRechargeAmount(amt)}
                 className={`py-2 rounded-xl text-xs font-mono font-black border transition-all btn-touch ${
-                  rechargeAmount === amt
+                  Number(rechargeAmount) === amt
                     ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm'
                     : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
                 }`}
@@ -230,11 +211,19 @@ export default function DepositModal({ isOpen, onClose }) {
         <div className="space-y-1">
           <input
             type="number"
-            min="10"
-            value={rechargeAmount}
-            onChange={e => setRechargeAmount(Number(e.target.value))}
+            min={minDeposit}
+            value={rechargeAmount === '' ? '' : rechargeAmount}
+            onChange={e => {
+              const val = e.target.value.replace(/[^0-9]/g, '');
+              setRechargeAmount(val === '' ? '' : val);
+            }}
+            onKeyDown={e => {
+              if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+                e.preventDefault();
+              }
+            }}
             className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
-            placeholder="Enter amount (₹)"
+            placeholder={`Enter custom amount (Min: ₹${minDeposit})`}
           />
         </div>
 
