@@ -5,7 +5,8 @@ import { Toaster } from 'react-hot-toast';
 import { io } from 'socket.io-client';
 import { useAuthStore } from './store/useAuthStore';
 import { useGameStore } from './store/useGameStore';
-import AuthPage from './pages/AuthPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import GamePage from './pages/GamePage';
 import TrendsPage from './pages/TrendsPage';
 import BetsPage from './pages/BetsPage';
@@ -132,10 +133,10 @@ export default function App() {
           </Routes>
         ) : (
           <Routes>
-            <Route path="/login" element={<AuthPage initialMode="login" />} />
-            <Route path="/signup" element={<AuthPage initialMode="signup" />} />
-            <Route path="/register" element={<AuthPage initialMode="signup" />} />
-            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<RegisterPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/auth" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         )}

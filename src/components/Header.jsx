@@ -13,7 +13,7 @@ export default function Header({ onOpenDeposit, onOpenRules, onOpenSupport }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/auth');
+    navigate('/login');
   };
 
   return (
