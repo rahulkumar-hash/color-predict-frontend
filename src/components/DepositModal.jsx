@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowDownRight, X, Zap, Smartphone, CreditCard, ShieldCheck, RefreshCw, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -23,11 +23,18 @@ export default function DepositModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const { user, sysConfig, fetchSysConfig } = useAuthStore();
-  const { submitRecharge, createPaymentOrder, verifyRazorpayPayment, recharging } = useWalletStore();
+  const { submitRecharge, autoRechargeWallet, createPaymentOrder, verifyRazorpayPayment, recharging } = useWalletStore();
 
   const [rechargeAmount, setRechargeAmount] = useState(500);
   const [utrNumber, setUtrNumber] = useState('');
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [selectedGateway, setSelectedGateway] = useState('UPI');
+
+  const amountRef = useRef(rechargeAmount);
+
+  useEffect(() => {
+    amountRef.current = rechargeAmount;
+  }, [rechargeAmount]);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,122 +50,100 @@ export default function DepositModal({ isOpen, onClose }) {
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
-  const activeMethod = sysConfig?.activePaymentMethod || 'MANUAL_UPI';
+  // Register NPCI UPI Intent Result Callback on window for Android WebView
+  useEffect(() => {
+    window.onUpiPaymentResult = async (responseStr, resultCode) => {
+      console.log('[NPCI UPI Result]', responseStr, 'ResultCode:', resultCode);
+      if (!responseStr) return;
 
-  const minDeposit = sysConfig?.minDepositAmount || 100;
+      const params = {};
+      (responseStr || '').split('&').forEach((p) => {
+        const [k, v] = p.split('=');
+        if (k) params[k.trim().toLowerCase()] = decodeURIComponent((v || '').trim());
+      });
 
-  const handleManualRechargeSubmit = async (e) => {
-    e.preventDefault();
-    const numAmt = Number(rechargeAmount);
-    if (!numAmt || numAmt < minDeposit) {
-      toast.error(`Minimum deposit amount is ₹${minDeposit}`);
-      return;
-    }
+      const status = (params.status || '').toUpperCase();
+      const responseCode = params.responsecode || '';
+      const rawLower = (responseStr || '').toLowerCase();
 
-    if (!utrNumber || utrNumber.trim().length < 8) {
-      toast.error('Please enter a valid 12-digit UTR/Reference Number');
-      return;
-    }
+      // Check explicit failure or cancellation
+      const isFailedOrCancelled =
+        status === 'FAILURE' ||
+        status === 'FAILED' ||
+        status === 'CANCEL' ||
+        status === 'CANCELLED' ||
+        rawLower.includes('fail') ||
+        rawLower.includes('cancel') ||
+        responseCode === 'ZM' ||
+        responseCode === 'Y1';
 
-    const toastId = toast.loading('Submitting UTR verification...');
-    const res = await submitRecharge(numAmt, utrNumber.trim());
+      const isSuccess =
+        !isFailedOrCancelled &&
+        (status === 'SUCCESS' ||
+          status === 'SUBMITTED' ||
+          responseCode === '00' ||
+          responseCode === '0');
 
-    if (res.success) {
-      toast.success(res.message || 'UTR submitted successfully!', { id: toastId, duration: 4000 });
-      setUtrNumber('');
-      onClose();
-    } else {
-      toast.error(res.error || 'Failed to submit UTR', { id: toastId });
-    }
-  };
+      if (isSuccess) {
+        const toastId = toast.loading('Payment verified! Adding balance to wallet...', { id: 'upi-auto-credit' });
+        const numAmt = Number(amountRef.current || params.am || rechargeAmount);
+        const txnId = params.txnid || params.approvalrefno || `UPI_${Date.now()}`;
+        const approvalRef = params.approvalrefno || params.txnref || txnId;
 
-  const handleAutomatedRazorpayPay = async () => {
-    const numAmt = Number(rechargeAmount);
-    if (!numAmt || numAmt < minDeposit) {
-      toast.error(`Minimum deposit amount is ₹${minDeposit}`);
-      return;
-    }
-
-    setCreatingOrder(true);
-    const toastId = toast.loading('Opening Razorpay...');
-
-    const res = await createPaymentOrder(numAmt, 'AUTOMATED_RAZORPAY');
-    setCreatingOrder(false);
-
-    if (!res.success || !res.data) {
-      toast.error(res.error || 'Failed to initialize Razorpay checkout', { id: toastId });
-      return;
-    }
-
-    const resLoaded = await loadRazorpayScript();
-    if (!resLoaded) {
-      toast.error('Razorpay SDK failed to load.', { id: toastId });
-      return;
-    }
-
-    toast.dismiss(toastId);
-
-    const orderData = res.data?.order || res.data;
-    const razorpayKey = orderData.keyId || orderData.razorpayKey || sysConfig?.razorpayConfig?.keyId || 'rzp_test_demo123';
-    const amountInPaisa = orderData.amountInPaisa || (numAmt * 100);
-
-    const options = {
-      key: razorpayKey,
-      amount: amountInPaisa,
-      currency: orderData.currency || 'INR',
-      name: sysConfig.appName || 'Color Predict Pro',
-      description: `Deposit ₹${numAmt}`,
-      image: sysConfig.appLogoUrl || '',
-      prefill: {
-        name: user?.fullName || user?.username,
-        email: user?.email || 'user@example.com',
-        contact: user?.phone || '9999999999'
-      },
-      theme: { color: '#10B981' },
-      handler: async function (response) {
-        const verifyToast = toast.loading('Verifying payment...');
-        const verifyRes = await verifyRazorpayPayment({
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_signature: response.razorpay_signature,
-          txnId: orderData.txnId || orderData.orderId
-        });
-
-        if (verifyRes.success) {
-          toast.success(verifyRes.message || 'Payment verified! Wallet credited.', { id: verifyToast, duration: 4000 });
+        const res = await autoRechargeWallet(numAmt, txnId, approvalRef, responseCode);
+        if (res.success) {
+          toast.success(`₹${numAmt} Wallet Recharge Successful! 🎉`, { id: toastId, duration: 5000 });
           onClose();
         } else {
-          toast.error(verifyRes.error || 'Verification failed', { id: verifyToast });
+          toast.error(res.error || 'Auto-credit failed. Please submit UTR manually.', { id: toastId });
         }
-      },
-      modal: {
-        ondismiss: function () {
-          setCreatingOrder(false);
+      } else {
+        if (params.error === 'NO_APP') {
+          toast.error('No UPI payment application found on this device.');
+        } else if (isFailedOrCancelled) {
+          toast.error('Payment cancelled or failed in UPI app.');
         }
       }
     };
 
-    if (orderData.razorpayOrderId || orderData.order_id) {
-      options.order_id = orderData.razorpayOrderId || orderData.order_id;
-    }
+    return () => {
+      window.onUpiPaymentResult = null;
+    };
+  }, [autoRechargeWallet, onClose, rechargeAmount]);
 
-    try {
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
-    } catch (err) {
-      toast.error('Could not launch Razorpay.');
+  const minDeposit = sysConfig?.minDepositAmount || 100;
+  const upiId = sysConfig?.upiId || '9136799526-2@ybl';
+  const appName = encodeURIComponent(sysConfig?.appName || 'ColorPredictPro');
+
+  const triggerUpiPayment = (link) => {
+    if (window.AndroidUpi && typeof window.AndroidUpi.startUpiPayment === 'function') {
+      window.AndroidUpi.startUpiPayment(link);
+    } else {
+      window.location.href = link;
     }
   };
 
-  const handleGPay = () => {
+  const handleLaunchUpi = (appType) => {
     const numAmt = Number(rechargeAmount);
     if (!numAmt || numAmt < minDeposit) {
       toast.error(`Minimum deposit amount is ₹${minDeposit}`);
       return;
     }
-    const upiId = sysConfig?.upiId || '9136799526-2@ybl';
-    const appName = encodeURIComponent(sysConfig?.appName || 'RRR');
-    window.location.href = `tez://upi/pay?pa=${upiId}&pn=${appName}&am=${numAmt}&cu=INR&tn=Recharge`;
+
+    const txnRef = `CP${Date.now()}`;
+    let link = '';
+
+    if (appType === 'gpay') {
+      link = `tez://upi/pay?pa=${encodeURIComponent(upiId)}&pn=${appName}&am=${numAmt}&cu=INR&tr=${txnRef}&tn=Wallet%20Recharge`;
+    } else if (appType === 'phonepe') {
+      link = `phonepe://pay?pa=${encodeURIComponent(upiId)}&pn=${appName}&am=${numAmt}&cu=INR&tr=${txnRef}&tn=Wallet%20Recharge`;
+    } else if (appType === 'paytm') {
+      link = `paytmmp://pay?pa=${encodeURIComponent(upiId)}&pn=${appName}&am=${numAmt}&cu=INR&tr=${txnRef}&tn=Wallet%20Recharge`;
+    } else {
+      link = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${appName}&am=${numAmt}&cu=INR&tr=${txnRef}&tn=Wallet%20Recharge`;
+    }
+
+    triggerUpiPayment(link);
   };
 
   return (
@@ -227,71 +212,86 @@ export default function DepositModal({ isOpen, onClose }) {
           />
         </div>
 
-        {/* GATEWAY 1: AUTOMATED RAZORPAY */}
-        {activeMethod === 'AUTOMATED_RAZORPAY' && (
-          <div className="pt-2 border-t border-slate-800 space-y-2">
-            <button
-              type="button"
-              onClick={handleAutomatedRazorpayPay}
-              disabled={creatingOrder}
-              className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <ShieldCheck className="w-4 h-4" /> {creatingOrder ? 'Opening Razorpay...' : `Pay ₹${rechargeAmount} with Razorpay`}
-            </button>
-          </div>
-        )}
+        {/* Payment Tabs: Instant UPI Apps vs QR / UTR */}
+        <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+          <button
+            type="button"
+            onClick={() => setSelectedGateway('UPI')}
+            className={`flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              selectedGateway === 'UPI' ? 'bg-emerald-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" /> Instant UPI
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedGateway('QR')}
+            className={`flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              selectedGateway === 'QR' ? 'bg-emerald-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <QrCode className="w-3.5 h-3.5" /> QR / UTR
+          </button>
+        </div>
 
-        {/* GATEWAY 2: DIRECT GOOGLE PAY INTENT */}
-        {activeMethod === 'AUTOMATED_UPI_GATEWAY' && (
-          <div className="pt-2 border-t border-slate-800 space-y-3">
-            {/* Direct Google Pay Launch Button */}
-            <button
-              type="button"
-              onClick={handleGPay}
-              disabled={creatingOrder}
-              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <Zap className="w-4 h-4 text-amber-300" />
-              <span>Pay ₹{rechargeAmount} via Google Pay</span>
-            </button>
-
-            {/* Simple UTR Entry Form */}
-            <form onSubmit={handleManualRechargeSubmit} className="space-y-2 pt-1 border-t border-slate-800/80">
-              <input
-                type="text"
-                value={utrNumber}
-                onChange={e => setUtrNumber(e.target.value)}
-                placeholder="Enter 12-digit UTR / Ref No."
-                className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
-                required
-              />
+        {/* OPTION 1: INSTANT UPI APPS (GPay, PhonePe, Paytm, Any UPI) */}
+        {selectedGateway === 'UPI' && (
+          <div className="space-y-2 pt-1">
+            <div className="grid grid-cols-2 gap-2">
               <button
-                type="submit"
-                disabled={recharging}
-                className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm btn-touch flex items-center justify-center gap-2 disabled:opacity-50"
+                type="button"
+                onClick={() => handleLaunchUpi('gpay')}
+                className="py-3 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm btn-touch"
               >
-                <ShieldCheck className="w-4 h-4" /> {recharging ? 'Submitting...' : 'Submit UTR'}
+                <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> Google Pay
               </button>
-            </form>
+              <button
+                type="button"
+                onClick={() => handleLaunchUpi('phonepe')}
+                className="py-3 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-purple-500 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm btn-touch"
+              >
+                <span className="w-3 h-3 rounded-full bg-purple-500 inline-block" /> PhonePe
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLaunchUpi('paytm')}
+                className="py-3 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm btn-touch"
+              >
+                <span className="w-3 h-3 rounded-full bg-cyan-500 inline-block" /> Paytm
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLaunchUpi('other')}
+                className="py-3 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-500 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm btn-touch"
+              >
+                <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" /> Other UPI
+              </button>
+            </div>
+            <p className="text-[10px] text-center text-slate-400">
+              💡 Payment complete hone ke baad wallet automatic recharge ho jayega.
+            </p>
           </div>
         )}
 
-        {/* GATEWAY 3: MANUAL UPI (QR CODE) */}
-        {activeMethod === 'MANUAL_UPI' && (
-          <form onSubmit={handleManualRechargeSubmit} className="pt-2 border-t border-slate-800 space-y-3">
+        {/* OPTION 2: QR CODE & MANUAL UTR SUBMISSION */}
+        {selectedGateway === 'QR' && (
+          <form onSubmit={handleManualRechargeSubmit} className="space-y-3 pt-1">
             {sysConfig?.qrCodeUrl && (
               <div className="w-32 h-32 mx-auto bg-white p-1.5 rounded-xl shadow-md border border-slate-700">
                 <img src={sysConfig.qrCodeUrl} alt="UPI QR" className="w-full h-full object-contain" />
               </div>
             )}
-            <input
-              type="text"
-              value={utrNumber}
-              onChange={e => setUtrNumber(e.target.value)}
-              placeholder="Enter 12-digit UTR / Ref No."
-              className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500"
-              required
-            />
+            <div className="space-y-1">
+              <span className="text-[10px] text-slate-400">UPI ID: <span className="text-emerald-400 font-mono font-bold">{upiId}</span></span>
+              <input
+                type="text"
+                value={utrNumber}
+                onChange={e => setUtrNumber(e.target.value)}
+                placeholder="Enter 12-digit UTR / Ref No."
+                className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500"
+                required
+              />
+            </div>
             <button
               type="submit"
               disabled={recharging}

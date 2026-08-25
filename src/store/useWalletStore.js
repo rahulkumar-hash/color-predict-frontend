@@ -56,6 +56,32 @@ export const useWalletStore = create((set, get) => ({
     }
   },
 
+  autoRechargeWallet: async (amount, txnId, approvalRefNo, responseCode) => {
+    try {
+      const res = await apiClient.post('/v1/wallet/auto-recharge', {
+        amount,
+        txnId,
+        approvalRefNo,
+        responseCode
+      });
+      get().fetchTransactions();
+      try {
+        const { useAuthStore } = await import('./useAuthStore');
+        useAuthStore.getState().fetchProfile();
+      } catch (e) {}
+      return {
+        success: true,
+        message: res.data?.message || 'Wallet auto-recharged successfully!',
+        newBalance: res.data?.data?.newBalance
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.response?.data?.message || 'Auto-recharge failed'
+      };
+    }
+  },
+
   submitWithdrawal: async (amount, upiId, bankDetails) => {
     set({ withdrawing: true });
     try {
