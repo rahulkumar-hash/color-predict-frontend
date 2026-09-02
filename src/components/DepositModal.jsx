@@ -56,6 +56,12 @@ export default function DepositModal({ isOpen, onClose }) {
       console.log('[NPCI UPI Result]', responseStr, 'ResultCode:', resultCode);
       if (!responseStr) return;
 
+      // 1. Android Activity Result check (RESULT_OK is -1)
+      if (resultCode !== -1 && resultCode !== "-1") {
+        toast.error("Payment was cancelled.");
+        return;
+      }
+
       const params = {};
       (responseStr || '').split('&').forEach((p) => {
         const [k, v] = p.split('=');
@@ -63,10 +69,10 @@ export default function DepositModal({ isOpen, onClose }) {
       });
 
       const status = (params.status || '').toUpperCase();
-      const responseCode = params.responsecode || '';
+      const responseCode = (params.responsecode || '').toUpperCase();
       const rawLower = (responseStr || '').toLowerCase();
 
-      // Check explicit failure or cancellation
+      // 2. Strict failure/cancellation check
       const isFailedOrCancelled =
         status === 'FAILURE' ||
         status === 'FAILED' ||
@@ -75,14 +81,13 @@ export default function DepositModal({ isOpen, onClose }) {
         rawLower.includes('fail') ||
         rawLower.includes('cancel') ||
         responseCode === 'ZM' ||
-        responseCode === 'Y1';
+        responseCode === 'Y1' ||
+        responseCode === 'CANCELLED';
 
+      // 3. Strict SUCCESS check: MUST be SUCCESS or responseCode 00 / 0
       const isSuccess =
         !isFailedOrCancelled &&
-        (status === 'SUCCESS' ||
-          status === 'SUBMITTED' ||
-          responseCode === '00' ||
-          responseCode === '0');
+        (status === 'SUCCESS' || responseCode === '00' || responseCode === '0');
 
       if (isSuccess) {
         const toastId = toast.loading('Payment verified! Adding balance to wallet...', { id: 'upi-auto-credit' });
@@ -100,7 +105,7 @@ export default function DepositModal({ isOpen, onClose }) {
       } else {
         if (params.error === 'NO_APP') {
           toast.error('No UPI payment application found on this device.');
-        } else if (isFailedOrCancelled) {
+        } else {
           toast.error('Payment cancelled or failed in UPI app.');
         }
       }
