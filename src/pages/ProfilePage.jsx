@@ -66,7 +66,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [avatarPreview, setAvatarPreview] = useState(
-    user?.avatarUrl ? (user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:5000${user.avatarUrl}`) : ''
+      user?.avatarUrl ? (user.avatarUrl.startsWith('http') ? user.avatarUrl : `${import.meta.env.VITE_SOCKET_URL || 'http://160.191.14.113:5000'}${user.avatarUrl}`) : ''
   );
 
   // Password States (Desktop)
@@ -92,7 +92,7 @@ export default function ProfilePage() {
       setEmail(user.email || '');
       setPhone(user.phone || '');
       if (user.avatarUrl) {
-        setAvatarPreview(user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:5000${user.avatarUrl}`);
+        setAvatarPreview(user.avatarUrl.startsWith('http') ? user.avatarUrl : `${import.meta.env.VITE_SOCKET_URL || 'http://160.191.14.113:5000'}${user.avatarUrl}`);
       }
     }
   }, [user]);

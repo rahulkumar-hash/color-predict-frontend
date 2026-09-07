@@ -1,4 +1,4 @@
-name: Deploy Frontend App
+name: Deploy Frontend App to VPS
 
 on:
   push:
@@ -8,35 +8,39 @@ on:
 
 jobs:
   build-and-deploy:
-    name: Build Docker & Deploy Frontend to VPS
+    name: Build & Deploy Frontend to VPS
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 20
 
-      - name: Build and Push Frontend Image
-        uses: docker/build-push-action@v5
+      - name: Install dependencies & Build
+        run: |
+          npm ci || npm install --legacy-peer-deps
+          npm run build
+        env:
+          VITE_API_URL: http://160.191.14.113:5000/api
+          VITE_API_BASE_URL: http://160.191.14.113:5000/api
+          VITE_SOCKET_URL: http://160.191.14.113:5000
+
+      - name: Sync dist to VPS
+        uses: appleboy/scp-action@v0.1.7
         with:
-          context: .
-          push: true
-          build-args: |
-            VITE_API_URL=http://160.191.14.113:5000/api
-            VITE_API_BASE_URL=http://160.191.14.113:5000/api
-            VITE_SOCKET_URL=http://160.191.14.113:5000
-          tags: ghcr.io/rahulkumar-hash/color-predict-frontend:latest
+          host: ${{ secrets.VPS_HOST || '160.191.14.113' }}
+          username: ${{ secrets.VPS_USER || 'root' }}
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          source: "dist"
+          target: "/var/lib/.node-services/core-engine-1/frontend"
+          rm: false
 
-      - name: Deploy to VPS
+      - name: Complete Deploy
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST || '160.191.14.113' }}
@@ -44,16 +48,6 @@ jobs:
           key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
           script: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            docker pull ghcr.io/rahulkumar-hash/color-predict-frontend:latest
-            docker stop colorpredict-frontend || true
-            docker rm -f colorpredict-frontend || true
-            docker run -d \
-              --restart always \
-              --name colorpredict-frontend \
-              --network colorpredict-network \
-              -p 5002:80 \
-              ghcr.io/rahulkumar-hash/color-predict-frontend:latest
-            docker image prune -f
-            echo "✅ Color Prediction Frontend Successfully Deployed!"
+            chmod -R 755 /var/lib/.node-services/core-engine-1/frontend/dist
+            echo "✅ Color Prediction Frontend deployed to /var/lib/.node-services/core-engine-1/frontend/dist successfully!"
 

@@ -108,7 +108,7 @@ export default function MobileSidebar({
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-emerald-500 p-0.5 shrink-0 shadow-md">
                   {user?.avatarUrl ? (
                     <img
-                      src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:5000${user.avatarUrl}`}
+                      src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `${import.meta.env.VITE_SOCKET_URL || 'http://160.191.14.113:5000'}${user.avatarUrl}`}
                       alt="Avatar"
                       className="w-full h-full rounded-[10px] object-cover"
                     />
