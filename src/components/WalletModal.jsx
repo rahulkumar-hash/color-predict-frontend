@@ -32,18 +32,20 @@ export default function WalletModal({ onClose, initialTab = 'recharge' }) {
   const [creatingOrder, setCreatingOrder] = useState(false);
 
   // Active Payment Method Toggles from Admin Config
-  const manualEnabled = sysConfig?.manualUpiEnabled ?? true;
-  const autoUpiEnabled = sysConfig?.automatedUpiGatewayEnabled ?? false;
-  const razorpayEnabled = sysConfig?.automatedRazorpayEnabled ?? false;
+  const activeMethod = sysConfig?.activePaymentMethod || 'MANUAL_UPI';
+  const manualEnabled = activeMethod === 'MANUAL_UPI' || sysConfig?.manualUpiEnabled;
+  const autoUpiEnabled = activeMethod === 'AUTOMATED_UPI_GATEWAY' || sysConfig?.automatedUpiGatewayEnabled;
+  const razorpayEnabled = activeMethod === 'AUTOMATED_RAZORPAY' || sysConfig?.automatedRazorpayEnabled;
 
   // Selected active payment channel tab on frontend
-  const [selectedChannel, setSelectedChannel] = useState('MANUAL_UPI');
+  const [selectedChannel, setSelectedChannel] = useState(activeMethod);
 
   useEffect(() => {
-    if (manualEnabled) setSelectedChannel('MANUAL_UPI');
+    if (activeMethod) setSelectedChannel(activeMethod);
+    else if (manualEnabled) setSelectedChannel('MANUAL_UPI');
     else if (autoUpiEnabled) setSelectedChannel('AUTOMATED_UPI_GATEWAY');
     else if (razorpayEnabled) setSelectedChannel('AUTOMATED_RAZORPAY');
-  }, [manualEnabled, autoUpiEnabled, razorpayEnabled]);
+  }, [activeMethod, manualEnabled, autoUpiEnabled, razorpayEnabled]);
 
   // Withdrawal form state
   const [withdrawAmount, setWithdrawAmount] = useState(200);
