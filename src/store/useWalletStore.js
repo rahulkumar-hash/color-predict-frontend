@@ -121,13 +121,18 @@ export const useWalletStore = create((set, get) => ({
 
   verifyRazorpayPayment: async (payload) => {
     try {
-      const refNumber = payload?.txnId || payload?.razorpay_order_id || payload;
-      const rzpPayId = payload?.razorpay_payment_id || payload;
+      const orderId = typeof payload === 'string'
+        ? payload
+        : (payload?.orderId || payload?.txnId || payload?.razorpay_order_id || '');
+      const rzpPayId = typeof payload === 'string'
+        ? payload
+        : (payload?.razorpay_payment_id || payload?.razorpayPaymentId || '');
+      const refNumber = String(orderId || rzpPayId || '').trim();
 
       const res = await apiClient.post('/v1/payment/webhook/razorpay', {
-        orderId: refNumber,
-        utrNumber: refNumber,
-        razorpayPaymentId: rzpPayId,
+        orderId: String(orderId || refNumber).trim(),
+        utrNumber: String(refNumber).trim(),
+        razorpayPaymentId: String(rzpPayId || refNumber).trim(),
         status: 'APPROVED'
       });
       try {

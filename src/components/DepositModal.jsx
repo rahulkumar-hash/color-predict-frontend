@@ -294,38 +294,7 @@ export default function DepositModal({ isOpen, onClose }) {
     }
   };
 
-  const handleSimulateTestPayment = async () => {
-    const numAmt = Number(rechargeAmount);
-    if (!numAmt || numAmt < minDeposit) {
-      toast.error(`Minimum deposit amount is ₹${minDeposit}`);
-      return;
-    }
 
-    setCreatingOrder(true);
-    const toastId = toast.loading('Processing Test Razorpay payment...');
-    const orderRes = await createPaymentOrder(numAmt, 'AUTOMATED_RAZORPAY');
-
-    if (!orderRes.success || !orderRes.data) {
-      setCreatingOrder(false);
-      toast.error(orderRes.error || 'Failed to initialize payment', { id: toastId });
-      return;
-    }
-
-    const orderData = orderRes.data;
-    const testPaymentId = `pay_test_${Date.now()}`;
-    const verifyRes = await verifyRazorpayPayment({
-      orderId: orderData.orderId || orderData.txnId,
-      razorpay_payment_id: testPaymentId
-    });
-    setCreatingOrder(false);
-
-    if (verifyRes.success) {
-      toast.success('Test Payment Verified & ₹' + numAmt + ' Credited! 🎉', { id: toastId, duration: 4000 });
-      onClose();
-    } else {
-      toast.error(verifyRes.error || 'Verification failed', { id: toastId });
-    }
-  };
 
   const qrImageUrl = sysConfig?.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${appName}&am=${rechargeAmount}&cu=INR&tn=Wallet%20Recharge`)}`;
 
@@ -563,16 +532,6 @@ export default function DepositModal({ isOpen, onClose }) {
             >
               <ShieldCheck className="w-4 h-4 text-emerald-300" />
               <span>{creatingOrder ? 'Opening Razorpay...' : `Pay ₹${rechargeAmount || minDeposit} with Razorpay`}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSimulateTestPayment}
-              disabled={creatingOrder}
-              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 font-bold text-[11px] rounded-xl transition-all btn-touch flex items-center justify-center gap-1.5 disabled:opacity-50"
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span>⚡ Instant Test Pay & Auto-Credit (Simulate)</span>
             </button>
           </div>
         )}
