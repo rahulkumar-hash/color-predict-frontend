@@ -81,6 +81,22 @@ export default function LoginHistoryPage() {
             ) : (
               historyList.map((log) => {
                 const isMobile = log.deviceType === 'Mobile';
+                const rawDate = log.loginTime || log.loggedInAt || log.createdAt;
+                const formattedDate = rawDate && !isNaN(new Date(rawDate).getTime())
+                  ? new Date(rawDate).toLocaleString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })
+                  : 'Recently';
+
+                const displayLocation = log.location && log.location !== 'Localhost' && log.location !== 'Unknown Location'
+                  ? log.location
+                  : (log.ipAddress && log.ipAddress !== '127.0.0.1' && log.ipAddress !== 'localhost' ? 'India' : 'Localhost');
+
                 return (
                   <div key={log._id} className="glass-card p-3.5 space-y-2 border border-slate-800">
                     <div className="flex items-center justify-between gap-2">
@@ -97,11 +113,11 @@ export default function LoginHistoryPage() {
 
                     <div className="flex items-center justify-between text-[11px] text-slate-400">
                       <span>{log.browser || 'Browser'}</span>
-                      <span>{log.location || 'Unknown Location'}</span>
+                      <span className="text-slate-300 font-medium">{displayLocation}</span>
                     </div>
 
-                    <div className="text-[10px] text-slate-500 font-mono pt-1 border-t border-slate-800/80 text-right">
-                      {new Date(log.createdAt).toLocaleString()}
+                    <div className="text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-800/80 text-right">
+                      {formattedDate}
                     </div>
                   </div>
                 );
@@ -145,6 +161,22 @@ export default function LoginHistoryPage() {
                   ) : (
                     historyList.map((log) => {
                       const isMobile = log.deviceType === 'Mobile';
+                      const rawDate = log.loginTime || log.loggedInAt || log.createdAt;
+                      const formattedDate = rawDate && !isNaN(new Date(rawDate).getTime())
+                        ? new Date(rawDate).toLocaleString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })
+                        : 'Recently';
+
+                      const displayLocation = log.location && log.location !== 'Localhost' && log.location !== 'Unknown Location'
+                        ? log.location
+                        : (log.ipAddress && log.ipAddress !== '127.0.0.1' && log.ipAddress !== 'localhost' ? 'India' : 'Localhost');
+
                       return (
                         <tr key={log._id} className="hover:bg-slate-800/30 transition-colors">
                           <td className="py-3 px-4">
@@ -153,10 +185,10 @@ export default function LoginHistoryPage() {
                               <span>{log.os || 'Unknown OS'} ({log.deviceType})</span>
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-slate-300">{log.browser || 'Browser'}</td>
+                          <td className="py-3 px-4 text-slate-300 font-medium">{log.browser || 'Browser'}</td>
                           <td className="py-3 px-4 font-mono text-emerald-400 font-bold">{log.ipAddress}</td>
-                          <td className="py-3 px-4 text-slate-400">{log.location || 'Unknown Location'}</td>
-                          <td className="py-3 px-4 font-mono text-slate-400 text-[11px] text-right">{new Date(log.createdAt).toLocaleString()}</td>
+                          <td className="py-3 px-4 text-slate-300 font-medium">{displayLocation}</td>
+                          <td className="py-3 px-4 font-mono text-slate-300 text-[11px] text-right font-medium">{formattedDate}</td>
                         </tr>
                       );
                     })

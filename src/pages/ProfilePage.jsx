@@ -772,6 +772,21 @@ export default function ProfilePage() {
                           ) : (
                             historyList.map((log) => {
                               const isMobile = log.deviceType === 'Mobile';
+                              const rawDate = log.loginTime || log.loggedInAt || log.createdAt;
+                              const formattedDate = rawDate && !isNaN(new Date(rawDate).getTime())
+                                ? new Date(rawDate).toLocaleString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })
+                                : 'Recently';
+
+                              const displayLocation = log.location && log.location !== 'Localhost' && log.location !== 'Unknown Location'
+                                ? log.location
+                                : (log.ipAddress && log.ipAddress !== '127.0.0.1' && log.ipAddress !== 'localhost' ? 'India' : 'Localhost');
 
                               return (
                                 <tr key={log._id} className="hover:bg-slate-800/30 transition-colors">
@@ -783,8 +798,8 @@ export default function ProfilePage() {
                                   </td>
                                   <td className="py-3 px-4 text-slate-300 font-medium">{log.browser || 'Browser'}</td>
                                   <td className="py-3 px-4 font-mono text-emerald-400 font-bold">{log.ipAddress}</td>
-                                  <td className="py-3 px-4 text-slate-400">{log.location || 'Unknown Location'}</td>
-                                  <td className="py-3 px-4 font-mono text-slate-400 text-[11px] text-right">{new Date(log.createdAt).toLocaleString()}</td>
+                                  <td className="py-3 px-4 text-slate-300 font-medium">{displayLocation}</td>
+                                  <td className="py-3 px-4 font-mono text-slate-300 text-[11px] text-right font-medium">{formattedDate}</td>
                                 </tr>
                               );
                             })
